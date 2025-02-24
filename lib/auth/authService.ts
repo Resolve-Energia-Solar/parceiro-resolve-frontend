@@ -1,14 +1,8 @@
 import { Supabase } from "../supabase";
 import bcrypt from "bcryptjs";
 
-const formatCpf = (cpf: string) => {
-  return cpf.replace(/\D/g, ""); 
-};
-
-const formatBirthDate = (birthDate: string) => {
-  const date = new Date(birthDate);
-  return date.toISOString().split("T")[0];
-};
+const formatCpf = (cpf: string) => cpf.replace(/\D/g, "");
+const formatBirthDate = (birthDate: string) => new Date(birthDate).toISOString().split("T")[0];
 
 export async function signUpWithCpfAndBirthDate({
   name,
@@ -16,27 +10,45 @@ export async function signUpWithCpfAndBirthDate({
   cpf,
   birthDate,
   password,
+  isSuperAdmin = false,  
 }: {
   name: string;
   email: string;
   cpf: string;
   birthDate: string;
   password: string;
+  isSuperAdmin?: boolean;  
 }) {
   try {
     const formattedCpf = formatCpf(cpf);
     const formattedBirthDate = formatBirthDate(birthDate);
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const { data: authData, error: authError } = await Supabase.auth.signUp({
+      email,
+      password,
+    });
 
-    const { data, error } = await Supabase
+    if (authError) throw new Error(authError.message);
+    if (!authData.user) throw new Error("Erro ao criar usuário no Auth");
+
+    const { data: userData, error: userError } = await Supabase
       .from("users")
-      .insert([{ name, email, cpf: formattedCpf, birthDate: formattedBirthDate, password: hashedPassword }])
+      .insert([
+        {
+          id: authData.user.id, 
+          name,
+          email,
+          cpf: formattedCpf,
+          birthdate: formattedBirthDate,
+          is_super_admin: isSuperAdmin,  
+        },
+      ])
       .select()
       .single();
 
-    if (error) throw new Error(error.message);
-    return data;
+    if (userError) throw new Error(userError.message);
+
+    return { authUser: authData.user, userData };
   } catch (error) {
     throw new Error(`Erro no cadastro: ${error}`);
   }
@@ -47,16 +59,29 @@ export async function signInWithCpfAndBirthDate(cpf: string, birthDate: string) 
     const formattedCpf = formatCpf(cpf);
     const formattedBirthDate = formatBirthDate(birthDate);
 
-    const { data, error } = await Supabase
+    const { data: user, error } = await Supabase
       .from("users")
-      .select("id, name, email, cpf, birthDate")
-      .eq("cpf", formattedCpf)  
-      .eq("birthDate", formattedBirthDate)  
+      .select("id, email, is_super_admin") 
+      .eq("cpf", formattedCpf)
+      .eq("birthDate", formattedBirthDate)
       .single();
 
-    if (error || !data) throw new Error("CPF ou data de nascimento inválidos");
+    if (error || !user) throw new Error("CPF ou data de nascimento inválidos");
 
-    return data; 
+    const { error: authError } = await Supabase.auth.signInWithPassword({
+      email: user.email,
+      password: formattedBirthDate, 
+    });
+
+    if (authError) throw new Error(authError.message);
+
+    if (user.is_super_admin) {
+      console.log("O usuário é um super admin");
+    } else {
+      console.log("O usuário não é um super admin");
+    }
+
+    return user;
   } catch (error) {
     throw new Error(`Erro no login: ${error}`);
   }
@@ -76,7 +101,20 @@ export async function getCurrentUser() {
   try {
     const { data: { user }, error } = await Supabase.auth.getUser();
     if (error || !user) throw new Error("Nenhum usuário logado");
-    return user;
+
+    const { data: userData, error: userError } = await Supabase
+      .from('users')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+    
+    if (userError) throw new Error("Erro ao buscar dados do usuário");
+
+    if (userData.is_super_admin) {
+      console.log("O usuário logado é super admin");
+    }
+
+    return { ...user, ...userData };
   } catch (error) {
     throw new Error(`Erro ao obter usuário: ${error}`);
   }

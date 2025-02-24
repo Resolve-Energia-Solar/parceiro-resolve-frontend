@@ -6,6 +6,10 @@ import { useUser } from "../../hooks/useUser";
 import { signUpWithCpfAndBirthDate, signInWithCpfAndBirthDate } from "../../lib/auth/authService";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { Calendar, FileText, Lock, User, Mail, Phone } from "lucide-react";
+import Image from "next/image";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -17,10 +21,17 @@ export default function OnboardingPage() {
     cpf: "",
     birthDate: "",
     email: "",
+    phone: "",
     password: "",
+    confirmPassword: "",
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -28,40 +39,42 @@ export default function OnboardingPage() {
     }
   }, [user, router]);
 
+  if (!isClient) return null;
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleAuth = async () => {
     setIsLoading(true);
-
     try {
       if (step === "login") {
         if (!formData.cpf || !formData.birthDate) {
-          alert("Por favor, preencha CPF e data de nascimento.");
+          toast.error("Por favor, preencha CPF e data de nascimento.");
           return;
         }
-
         const user = await signInWithCpfAndBirthDate(formData.cpf, formData.birthDate);
-
         if (user) {
-          alert("Login realizado com sucesso!");
+          toast.success("Login realizado com sucesso!");
           router.replace("/dashboard");
         }
       } else {
-        if (!formData.name || !formData.cpf || !formData.birthDate || !formData.email || !formData.password) {
-          alert("Todos os campos são obrigatórios.");
+        if (!formData.name || !formData.cpf || !formData.birthDate || !formData.email || !formData.phone || !formData.password || !formData.confirmPassword) {
+          toast.error("Todos os campos são obrigatórios.");
           return;
         }
-
+        if (formData.password !== formData.confirmPassword) {
+          toast.error("As senhas não coincidem.");
+          return;
+        }
         const newUser = await signUpWithCpfAndBirthDate(formData);
         if (newUser) {
-          alert("Cadastro realizado com sucesso! Faça login.");
+          toast.success("Cadastro realizado com sucesso! Faça login.");
           setStep("login");
         }
       }
     } catch (error: any) {
-      alert("Erro: " + error.message);
+      toast.error("Erro: " + error.message);
     } finally {
       setIsLoading(false);
     }
@@ -69,98 +82,78 @@ export default function OnboardingPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-6">
-      {step === "start" && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md text-center"
-        >
-          <h2 className="text-3xl font-bold mb-6 text-yellow-400">Você já é cliente?</h2>
-          <Button onClick={() => setStep("login")} className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 rounded-lg mb-4">
-            Sim, já sou cliente
-          </Button>
-          <Button onClick={() => setStep("register")} className="w-full bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 rounded-lg">
-            Não, quero me cadastrar
-          </Button>
-        </motion.div>
-      )}
-
-      {(step === "login" || step === "register") && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md"
-        >
-          <h2 className="text-3xl font-bold mb-6 text-yellow-400">{step === "login" ? "Faça seu Login" : "Crie sua Conta"}</h2>
-
-          {step === "register" && (
-            <>
-              <p className="text-xl">Nome</p>
-              <input
-                type="text"
-                name="name"
-                placeholder="Seu nome"
-                className="w-full px-4 py-2 rounded-lg bg-gray-800 text-white border border-yellow-400 focus:ring-2 focus:ring-yellow-500 focus:outline-none"
-                value={formData.name}
-                onChange={handleChange}
-              />
-
-              <p className="text-xl mt-4">E-mail</p>
-              <input
-                type="email"
-                name="email"
-                placeholder="seu@email.com"
-                className="w-full px-4 py-2 rounded-lg bg-gray-800 text-white border border-yellow-400 focus:ring-2 focus:ring-yellow-500 focus:outline-none"
-                value={formData.email}
-                onChange={handleChange}
-              />
-            </>
-          )}
-
-          <p className="text-xl mt-4">CPF</p>
-          <input
-            type="text"
-            name="cpf"
-            placeholder="000.000.000-00"
-            className="w-full px-4 py-2 rounded-lg bg-gray-800 text-white border border-yellow-400 focus:ring-2 focus:ring-yellow-500 focus:outline-none"
-            value={formData.cpf}
-            onChange={handleChange}
-          />
-
-          <p className="text-xl mt-4">Data de Nascimento</p>
-          <input
-            type="date"
-            name="birthDate"
-            className="w-full px-4 py-2 rounded-lg bg-gray-800 text-white border border-yellow-400 focus:ring-2 focus:ring-yellow-500 focus:outline-none"
-            value={formData.birthDate}
-            onChange={handleChange}
-          />
-
-          {step === "register" && (
-            <>
-              <p className="text-xl mt-4">Senha</p>
-              <input
-                type="password"
-                name="password"
-                placeholder="Sua senha"
-                className="w-full px-4 py-2 rounded-lg bg-gray-800 text-white border border-yellow-400 focus:ring-2 focus:ring-yellow-500 focus:outline-none"
-                value={formData.password}
-                onChange={handleChange}
-              />
-            </>
-          )}
-
-          <Button onClick={handleAuth} disabled={isLoading} className="mt-6 w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 rounded-lg">
-            {isLoading ? "Carregando..." : step === "login" ? "Entrar" : "Cadastrar"}
-          </Button>
-
-          <Button onClick={() => setStep("start")} className="mt-4 w-full bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 rounded-lg">
-            Voltar
-          </Button>
-        </motion.div>
-      )}
+      <Image src="https://fortaleza-aldeota.resolvenergiasolar.com/wp-content/uploads/2024/11/Logo-resolve-1024x279.webp"
+        alt="Logo" width={150} height={50} className="mb-6" />
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="w-full max-w-md text-center bg-gray-900 p-8 rounded-xl shadow-lg border border-yellow-500"
+      >
+        {step === "start" && (
+          <>
+            <motion.h2
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.4 }}
+              className="text-3xl font-bold mb-6 text-yellow-400"
+            >
+              Você já é cliente?
+            </motion.h2>
+            <div className="flex flex-col gap-4">
+              <Button onClick={() => setStep("login")} className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 rounded-lg flex items-center justify-center gap-2">
+                <User size={20} /> Sim, já sou cliente
+              </Button>
+              <Button onClick={() => setStep("register")} className="w-full bg-gray-700 hover:bg-gray-800 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2">
+                <User size={20} /> Não, quero me cadastrar
+              </Button>
+            </div>
+          </>
+        )}
+        {(step === "login" || step === "register") && (
+          <>
+            <motion.h2 initial={{ x: -50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.4 }} className="text-3xl font-bold mb-6 text-yellow-400">
+              {step === "login" ? "Faça seu Login" : "Crie sua Conta"}
+            </motion.h2>
+            <div className="flex flex-col gap-4">
+              {step === "register" && (
+                <>
+                  <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
+                    <User size={20} className="mr-2 text-yellow-400" />
+                    <input type="text" name="name" placeholder="Seu nome" className="w-full bg-transparent text-white outline-none" value={formData.name} onChange={handleChange} />
+                  </div>
+                  <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
+                    <FileText size={20} className="mr-2 text-yellow-400" />
+                    <input type="text" name="cpf" placeholder="CPF" className="w-full bg-transparent text-white outline-none" value={formData.cpf} onChange={handleChange} />
+                  </div>
+                  <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
+                    <Mail size={20} className="mr-2 text-yellow-400" />
+                    <input type="email" name="email" placeholder="E-mail" className="w-full bg-transparent text-white outline-none" value={formData.email} onChange={handleChange} />
+                  </div>
+                  <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
+                    <Phone size={20} className="mr-2 text-yellow-400" />
+                    <input type="text" name="phone" placeholder="Telefone" className="w-full bg-transparent text-white outline-none" value={formData.phone} onChange={handleChange} />
+                  </div>
+                  <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
+                    <Calendar size={20} className="mr-2 text-yellow-400" />
+                    <input type="date" name="birthDate" className="w-full bg-transparent text-white outline-none" value={formData.birthDate} onChange={handleChange} />
+                  </div>
+                  <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
+                    <Lock size={20} className="mr-2 text-yellow-400" />
+                    <input type="password" name="password" placeholder="Senha" className="w-full bg-transparent text-white outline-none" value={formData.password} onChange={handleChange} />
+                  </div>
+                  <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
+                    <Lock size={20} className="mr-2 text-yellow-400" />
+                    <input type="password" name="confirmPassword" placeholder="Confirmar Senha" className="w-full bg-transparent text-white outline-none" value={formData.confirmPassword} onChange={handleChange} />
+                  </div>
+                </>
+              )}
+            </div>
+            <Button onClick={handleAuth} className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 rounded-lg mt-4">{step === "login" ? "Entrar" : "Cadastrar"}</Button>
+          </>
+        )}
+      </motion.div>
+      <ToastContainer />
     </div>
   );
 }
