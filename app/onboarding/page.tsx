@@ -116,6 +116,18 @@ export default function OnboardingPage() {
               {step === "login" ? "Faça seu Login" : "Crie sua Conta"}
             </motion.h2>
             <div className="flex flex-col gap-4">
+              {step === "login" && (
+                <>
+                  <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
+                    <FileText size={20} className="mr-2 text-yellow-400" />
+                    <input type="text" name="cpf" placeholder="CPF" className="w-full bg-transparent text-white outline-none" value={formData.cpf} onChange={handleChange} />
+                  </div>
+                  <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
+                    <Calendar size={20} className="mr-2 text-yellow-400" />
+                    <input type="date" name="birthDate" className="w-full bg-transparent text-white outline-none" value={formData.birthDate} onChange={handleChange} />
+                  </div>
+                </>
+              )}
               {step === "register" && (
                 <>
                   <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">

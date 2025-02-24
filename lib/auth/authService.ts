@@ -39,7 +39,6 @@ export async function signUpWithCpfAndBirthDate({
           name,
           email,
           cpf: formattedCpf,
-          birthdate: formattedBirthDate,
           is_super_admin: isSuperAdmin,  
         },
       ])
@@ -61,16 +60,16 @@ export async function signInWithCpfAndBirthDate(cpf: string, birthDate: string) 
 
     const { data: user, error } = await Supabase
       .from("users")
-      .select("id, email, is_super_admin") 
+      .select("id, email, is_super_admin, password") 
       .eq("cpf", formattedCpf)
-      .eq("birthDate", formattedBirthDate)
+      .eq("birthdate", formattedBirthDate)
       .single();
 
     if (error || !user) throw new Error("CPF ou data de nascimento inválidos");
 
     const { error: authError } = await Supabase.auth.signInWithPassword({
       email: user.email,
-      password: formattedBirthDate, 
+      password: user.password, 
     });
 
     if (authError) throw new Error(authError.message);
