@@ -6,6 +6,7 @@ export interface User {
     referrals_count: number;
     created_at: string;
     updated_at: string;
+    is_admin: boolean;
   }
   
   export interface RankingUser {

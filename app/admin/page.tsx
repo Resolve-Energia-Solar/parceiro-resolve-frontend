@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function AdminPage() {
+  
   const { user } = useUser();
   const router = useRouter();
 
