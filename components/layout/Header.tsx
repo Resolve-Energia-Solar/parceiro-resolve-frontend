@@ -8,6 +8,7 @@ import { useUser } from "../../hooks/useUser";
 import { Bell, LogOut, User } from "lucide-react";
 import { signOut } from "../../services/auth/authService";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 interface HeaderProps {
   className?: string;
@@ -65,10 +66,16 @@ export function Header({ className }: HeaderProps) {
             transition={{ duration: 0.5 }}
           >
             <Link href="/">
-              <span className="text-2xl font-bold text-yellow-400">Resolve Energia Solar</span>
+              <Image
+                src="https://fortaleza-aldeota.resolvenergiasolar.com/wp-content/uploads/2024/11/Logo-resolve-1024x279.webp"
+                alt="Resolve Logo"
+                width={80}
+                height={40}
+                priority
+                className="h-10 w-auto"
+              />
             </Link>
           </motion.div>
-
           <motion.div
             className="flex items-center gap-4"
             initial={{ opacity: 0, x: 20 }}
@@ -76,8 +83,8 @@ export function Header({ className }: HeaderProps) {
             transition={{ delay: 0.3, duration: 0.5 }}
           >
             <div className="relative" ref={notificationsRef}>
-              <Bell 
-                className="w-6 h-6 cursor-pointer" 
+              <Bell
+                className="w-6 h-6 cursor-pointer"
                 onClick={() => setShowNotifications(!showNotifications)}
               />
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
@@ -94,9 +101,9 @@ export function Header({ className }: HeaderProps) {
                 </div>
               )}
             </div>
-            
+
             <div className="relative" ref={dropdownRef}>
-              <div 
+              <div
                 className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center cursor-pointer"
                 onClick={() => setShowDropdown(!showDropdown)}
               >
