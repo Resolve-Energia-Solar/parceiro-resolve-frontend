@@ -5,8 +5,8 @@ import { Users, Clock, Ban, CheckCircle, Copy, Share2 } from "lucide-react";
 import { StatsCard } from "../../components/dashboard/StatsCard";
 import { useDashboardData } from "../../hooks/useDashboardData";
 import { Loader2 } from "lucide-react";
-import { RankingList } from "../../components/dashboard/RankingList";
 import { Header } from "../../components/layout/Header";
+import { RankingList } from "@/components/dashboard/RankingList";
 
 export default function Dashboard() {
   const { data, loading } = useDashboardData();

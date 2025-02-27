@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "../../hooks/useUser";
-import { signUpWithCpfAndBirthDate, signInWithCpfAndBirthDate } from "../../lib/auth/authService";
+import { signUpWithCpfAndBirthDate, signInWithCpfAndBirthDate } from "../../services/auth/authService";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { toast, ToastContainer } from "react-toastify";
@@ -21,7 +21,7 @@ export default function OnboardingPage() {
     cpf: "",
     birthDate: "",
     email: "",
-    phone: "",
+    telefone: "",
     password: "",
     confirmPassword: "",
   });
@@ -59,7 +59,7 @@ export default function OnboardingPage() {
           router.replace("/dashboard");
         }
       } else {
-        if (!formData.name || !formData.cpf || !formData.birthDate || !formData.email || !formData.phone || !formData.password || !formData.confirmPassword) {
+        if (!formData.name || !formData.cpf || !formData.birthDate || !formData.email || !formData.telefone || !formData.password || !formData.confirmPassword) {
           toast.error("Todos os campos são obrigatórios.");
           return;
         }
@@ -67,7 +67,14 @@ export default function OnboardingPage() {
           toast.error("As senhas não coincidem.");
           return;
         }
-        const newUser = await signUpWithCpfAndBirthDate(formData);
+        const newUser = await signUpWithCpfAndBirthDate({
+          name: formData.name,
+          email: formData.email,
+          cpf: formData.cpf,
+          birthDate: formData.birthDate,
+          password: formData.password,
+          telefone: formData.telefone,
+        });
         if (newUser) {
           toast.success("Cadastro realizado com sucesso! Faça login.");
           setStep("login");
@@ -144,7 +151,7 @@ export default function OnboardingPage() {
                   </div>
                   <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
                     <Phone size={20} className="mr-2 text-yellow-400" />
-                    <input type="text" name="phone" placeholder="Telefone" className="w-full bg-transparent text-white outline-none" value={formData.phone} onChange={handleChange} />
+                    <input type="text" name="telefone" placeholder="Telefone" className="w-full bg-transparent text-white outline-none" value={formData.telefone} onChange={handleChange} />
                   </div>
                   <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
                     <Calendar size={20} className="mr-2 text-yellow-400" />
@@ -161,7 +168,9 @@ export default function OnboardingPage() {
                 </>
               )}
             </div>
-            <Button onClick={handleAuth} className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 rounded-lg mt-4">{step === "login" ? "Entrar" : "Cadastrar"}</Button>
+            <Button onClick={handleAuth} disabled={isLoading} className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 rounded-lg mt-4">
+              {isLoading ? "Processando..." : (step === "login" ? "Entrar" : "Cadastrar")}
+            </Button>
           </>
         )}
       </motion.div>

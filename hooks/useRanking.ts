@@ -1,25 +1,40 @@
-"use client";
+'use client';
 
-import { useState } from 'react';
-
-interface RankingUser {
-  id: string;
-  name: string;
-  referral_count: number;
-  rank: number;
-}
-
-const mockRankings: RankingUser[] = [
-  { id: "1", name: "João Silva", referral_count: 45, rank: 1 },
-  { id: "2", name: "Maria Santos", referral_count: 38, rank: 2 },
-  { id: "3", name: "Pedro Oliveira", referral_count: 32, rank: 3 },
-  { id: "4", name: "Ana Costa", referral_count: 28, rank: 4 },
-  { id: "5", name: "Lucas Pereira", referral_count: 25, rank: 5 }
-];
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { RankingUser } from '../types';
 
 export function useRanking() {
-  const [rankings] = useState<RankingUser[]>(mockRankings);
-  const [loading] = useState(false);
+  const [ranking, setRanking] = useState<RankingUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  return { rankings, loading, refreshRankings: () => {} };
+  useEffect(() => {
+    const fetchRanking = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('users')
+          .select('id, name, referral_count')
+          .order('referral_count', { ascending: false });
+
+        if (error) throw error;
+
+        const rankingWithPosition = data.map((user, index) => ({
+          ...user,
+          position: index + 1,
+        }));
+
+        setRanking(rankingWithPosition);
+      } catch (error: any) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRanking();
+  }, []);
+
+  return { ranking, loading, error };
 }

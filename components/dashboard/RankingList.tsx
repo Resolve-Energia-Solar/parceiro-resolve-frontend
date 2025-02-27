@@ -1,116 +1,101 @@
-import { motion } from "framer-motion";
-import { Trophy, Medal } from "lucide-react";
-import { Card } from "../../components/ui/card";
-import { useUser } from "../../hooks/useUser";
-import { useEffect, useState } from "react";
-import { Supabase } from "../../lib/supabase";
+'use client';
 
-interface RankingUser {
-  id: string;
-  name: string;
-  referral_count: number;
-}
+import { useRanking } from "@/hooks/useRanking";
+import { useUser } from "@/hooks/useUser";
+import { motion } from "framer-motion";
+import { Trophy, Medal, Sun } from "lucide-react";
+import { useState } from "react";
 
 export function RankingList() {
   const { user } = useUser();
-  const [rankings, setRankings] = useState<RankingUser[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchRankings = async () => {
-      try {
-        const { data, error } = await Supabase
-          .from("users")
-          .select("id, name, referral_count")
-          .order("referral_count", { ascending: false });
-
-        if (error) throw error;
-        setRankings(data);
-      } catch (error) {
-        console.error("Erro ao buscar rankings:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRankings();
-  }, []);
-
-  const getPositionIcon = (position: number) => {
-    switch (position) {
-      case 1:
-        return <Trophy className="w-6 h-6 text-yellow-500" />;
-      case 2:
-        return <Medal className="w-6 h-6 text-gray-300" />;
-      case 3:
-        return <Medal className="w-6 h-6 text-amber-400" />;
-      default:
-        return null;
-    }
-  };
+  const { ranking, loading, error } = useRanking();
+  const [showAllUsers, setShowAllUsers] = useState(false);
 
   if (loading) {
     return (
-      <div className="text-center text-white">
-        Carregando ranking...
+      <div className="flex justify-center items-center h-64">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        >
+          <Sun className="w-12 h-12 text-yellow-400" />
+        </motion.div>
       </div>
     );
   }
 
-  return (
-    <Card className="p-6 bg-gray-900 shadow-md rounded-lg border border-gray-800">
-      <h3 className="text-xl font-semibold text-white mb-6">Acompanhe sua posição no ranking</h3>
-      <div className="space-y-4">
-        {rankings.map((rankUser, index) => {
-          const isLoggedUser = rankUser.id === user?.id;
+  if (error) {
+    return <div className="text-red-500 text-center">Erro: {error}</div>;
+  }
 
-          return (
-            <motion.div
-              key={rankUser.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className={`p-4 rounded-lg border border-gray-700 ${
-                isLoggedUser
-                  ? "bg-primary/20 border-primary scale-105 shadow-lg"
-                  : "bg-gray-800"
-              } ${index < 3 ? "scale-105 shadow-lg" : ""}`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${
-                      index === 0
-                        ? "bg-yellow-500 text-gray-900"
-                        : index === 1
-                        ? "bg-gray-300 text-gray-900"
-                        : index === 2
-                        ? "bg-amber-400 text-gray-900"
-                        : "bg-gray-600 text-white"
-                    }`}
-                  >
-                    {index + 1}
-                  </div>
-                  <div>
-                    <p className="font-medium text-white">{rankUser.name}</p>
-                    <p className="text-sm text-gray-400">
-                      {rankUser.referral_count} indicações
-                    </p>
-                    {isLoggedUser && (
-                      <p className="text-sm text-yellow-400 mt-2">Você está em {index + 1}º lugar!</p>
-                    )}
-                  </div>
+  const userRank = ranking.findIndex(rankUser => rankUser.id === user?.id) + 1;
+  const displayedRanking = showAllUsers ? ranking : ranking.slice(0, 10);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="max-w-3xl mx-auto p-6 bg-black rounded-lg shadow-xl"
+    >
+      <h2 className="text-3xl font-bold mb-8 text-yellow-400 text-center">Ranking de Indicações</h2>
+      <div className="space-y-4">
+        {displayedRanking.map((rankUser, index) => (
+          <motion.div
+            key={rankUser.id}
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className={`p-4 rounded-lg shadow-md ${
+              rankUser.id === user?.id
+                ? "bg-yellow-400 text-black"
+                : "bg-gray-800 text-white"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg 
+                  ${index === 0 ? "bg-yellow-400 text-black" : 
+                    index === 1 ? "bg-gray-300 text-black" : 
+                    index === 2 ? "bg-yellow-600 text-white" : "bg-gray-600 text-white"}`}>
+                  {index + 1}
                 </div>
-                {index < 3 && (
-                  <div className="flex items-center gap-2">
-                    {getPositionIcon(index + 1)}
-                  </div>
-                )}
+                <div>
+                  <p className="font-medium">{rankUser.name}</p>
+                  <p className="text-sm opacity-75">
+                    {rankUser.referral_count} indicações
+                  </p>
+                </div>
               </div>
-            </motion.div>
-          );
-        })}
+              {index < 3 && (
+                <motion.div
+                  whileHover={{ scale: 1.2 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  {index === 0 && <Trophy className="w-8 h-8 text-yellow-400" />}
+                  {index === 1 && <Medal className="w-8 h-8 text-gray-300" />}
+                  {index === 2 && <Medal className="w-8 h-8 text-yellow-600" />}
+                </motion.div>
+              )}
+            </div>
+          </motion.div>
+        ))}
       </div>
-    </Card>
+      {!showAllUsers && ranking.length > 10 && (
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setShowAllUsers(true)}
+          className="mt-8 w-full py-3 bg-yellow-400 text-black font-bold rounded-lg shadow-md hover:bg-yellow-500 transition-colors duration-300"
+        >
+          Ver todos os usuários
+        </motion.button>
+      )}
+      {user && (
+        <div className="mt-8 text-center text-yellow-400">
+          {userRank > 0 ? `Você está na posição ${userRank}` : 'Você não está no ranking.'}
+        </div>
+      )}
+    </motion.div>
   );
 }

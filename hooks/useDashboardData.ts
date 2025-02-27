@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Supabase } from "../lib/supabase"; 
+import { supabase } from "../lib/supabase"; 
 
 export const useDashboardData = () => {
   const [data, setData] = useState({
@@ -16,28 +16,28 @@ export const useDashboardData = () => {
     const fetchData = async () => {
       setLoading(true);
 
-      const { data: referralsData, error: referralsError } = await Supabase
+      const { data: referralsData, error: referralsError } = await supabase
         .from('referrals')
         .select('*');
       const referralsCount = referralsData ? referralsData.length : 0;
 
-      const { data: rewardsData, error: rewardsError } = await Supabase
+      const { data: rewardsData, error: rewardsError } = await supabase
         .from('rewards')
         .select('*');
       const rewardsCount = rewardsData ? rewardsData.length : 0;
 
-      const { data: usersData, error: usersError } = await Supabase
+      const { data: usersData, error: usersError } = await supabase
         .from('users')
         .select('*');
       const usersCount = usersData ? usersData.length : 0;
 
-      const { data: usersLogData, error: usersLogError } = await Supabase
+      const { data: usersLogData, error: usersLogError } = await supabase
         .from('users_log')
         .select('*')
         .eq('action', 'disqualified');
       const disqualifiedCount = usersLogData ? usersLogData.length : 0;
 
-      const { data: signedContractsData, error: signedContractsError } = await Supabase
+      const { data: signedContractsData, error: signedContractsError } = await supabase
         .from('users_log')
         .select('*')
         .eq('action', 'signed_contract');

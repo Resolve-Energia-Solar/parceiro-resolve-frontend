@@ -1,7 +1,7 @@
-import { Supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 
 export async function getUser() {
-  const { data, error } = await Supabase.auth.getUser();
+  const { data, error } = await supabase.auth.getUser();
 
   if (error) {
     console.error("Erro ao buscar usuário:", error.message);
