@@ -16,13 +16,23 @@ export default function ReferralPage() {
       try {
         setLoading(true);
         
-        const { data: userData, error } = await supabase
+        const code = params.code as string;
+        console.log("Referral code:", code);
+
+        if (!code) {
+          throw new Error("Código de referência não fornecido");
+        }
+
+        const { data: userData, error: supabaseError } = await supabase
           .from("users")
           .select("id, name")
-          .eq("id", params.code)
+          .eq("referral_code", code)
           .single();
 
-        if (error) {
+        console.log("User data:", userData);
+
+        if (supabaseError) {
+          console.error("Supabase error:", supabaseError);
           throw new Error("Código de referência inválido");
         }
 
@@ -30,9 +40,8 @@ export default function ReferralPage() {
           throw new Error("Usuário não encontrado");
         }
 
-        localStorage.setItem("referrerId", userData.id);
-
-        router.push("/register");
+        // Redirecionar para a página de formulário com o código de referência
+        router.push(`/forms?ref=${code}`);
       } catch (err) {
         console.error("Erro:", err);
         setError(err instanceof Error ? err.message : 'Ocorreu um erro inesperado');
@@ -41,9 +50,7 @@ export default function ReferralPage() {
       }
     };
 
-    if (params.code) {
-      checkReferralCode();
-    }
+    checkReferralCode();
   }, [params.code, router]);
 
   if (loading) {
@@ -74,4 +81,3 @@ export default function ReferralPage() {
 
   return null;
 }
-

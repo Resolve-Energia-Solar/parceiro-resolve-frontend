@@ -56,7 +56,11 @@ export default function OnboardingPage() {
         const user = await signInWithCpfAndBirthDate(formData.cpf, formData.birthDate);
         if (user) {
           toast.success("Login realizado com sucesso!");
-          router.replace("/dashboard");
+          if (user.user_metadata?.is_super_admin) {
+            router.replace("/admin"); 
+          } else {
+            router.replace("/dashboard");
+          }
         }
       } else if (step === "register") {
         if (!formData.name || !formData.cpf || !formData.birthDate || !formData.email || !formData.telefone || !formData.password || !formData.confirmPassword) {
@@ -84,6 +88,7 @@ export default function OnboardingPage() {
       setIsLoading(false);
     }
   };
+  
 
   const handleResendConfirmation = async () => {
     setIsLoading(true);

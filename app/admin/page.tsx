@@ -63,7 +63,7 @@ export default function AdminPage() {
       toast.error('Erro ao atualizar status da indicação');
     } else {
       toast.success(`Status da indicação atualizado para ${newStatus}`);
-      fetchReferrals(); // Recarrega a lista de indicações
+      fetchReferrals(); 
     }
   };
 

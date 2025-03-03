@@ -114,12 +114,12 @@ export function Header({ className }: HeaderProps) {
                   <p className="px-4 py-2 text-sm text-gray-300">
                     Olá, {user ? user.name : 'Visitante'}
                   </p>
-                  <Link href="/profile" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">
+                  {/* <Link href="/profile" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">
                     Perfil
-                  </Link>
-                  <Link href="/settings" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">
+                  </Link> */}
+                  {/* <Link href="/settings" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">
                     Configurações
-                  </Link>
+                  </Link> */}
                   <button
                     onClick={handleSignOut}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
