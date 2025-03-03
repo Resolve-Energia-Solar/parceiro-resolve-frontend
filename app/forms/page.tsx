@@ -52,7 +52,7 @@ export default function FormsPage() {
       if (referralCode) {
         const { data: referrerData, error: referrerError } = await supabase
           .from("users")
-          .select("id")
+          .select("id, referral_count")
           .eq("referral_code", referralCode)
           .single();
 
@@ -60,6 +60,15 @@ export default function FormsPage() {
           console.error("Erro ao encontrar o usuário que fez a indicação:", referrerError);
         } else {
           referenceId = referrerData?.id;
+          
+          const { error: updateError } = await supabase
+            .from("users")
+            .update({ referral_count: (referrerData?.referral_count || 0) + 1 })
+            .eq("id", referenceId);
+
+          if (updateError) {
+            console.error("Erro ao atualizar a contagem de indicações:", updateError);
+          }
         }
       }
 
