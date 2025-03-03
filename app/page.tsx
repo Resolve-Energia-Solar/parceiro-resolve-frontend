@@ -12,6 +12,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
@@ -33,25 +34,50 @@ export default function Home() {
       }
     }
   };
+  interface Participant {
+    name: string;
+    referrals: number;
+    position: number;
+  }
 
-  const topParticipants = [
-    { name: "João Silva", referrals: 45, position: 1 },
-    { name: "Maria Santos", referrals: 38, position: 2 },
-    { name: "Pedro Oliveira", referrals: 32, position: 3 },
-    { name: "Ana Costa", referrals: 28, position: 4 },
-    { name: "Lucas Pereira", referrals: 25, position: 5 }
-  ];
+
+  const [topParticipants, setTopParticipants] = useState<Participant[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchTopParticipants() {
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('name, referral_count')
+          .order('referral_count', { ascending: false })
+          .limit(5);
+
+        if (error) throw error;
+
+        const formattedData = data.map((user, index) => ({
+          name: user.name,
+          referrals: user.referral_count,
+          position: index + 1
+        }));
+
+        setTopParticipants(formattedData);
+      } catch (error) {
+        console.error("Error fetching top participants:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchTopParticipants();
+  }, []);
 
   const getPositionIcon = (position: number) => {
     switch (position) {
-      case 1:
-        return <Trophy className="h-8 w-8 text-yellow-500" />;
-      case 2:
-        return <Medal className="h-8 w-8 text-gray-400" />;
-      case 3:
-        return <Medal className="h-8 w-8 text-amber-600" />;
-      default:
-        return <Gift className="h-8 w-8 text-primary" />;
+      case 1: return <Trophy className="w-8 h-8 text-yellow-500" />;
+      case 2: return <Medal className="w-8 h-8 text-gray-400" />;
+      case 3: return <Medal className="w-8 h-8 text-amber-600" />;
+      default: return <Users className="w-8 h-8 text-primary" />;
     }
   };
 
@@ -170,131 +196,71 @@ export default function Home() {
 
           <div className="mb-20">
             <div className="relative h-[400px] flex items-end justify-center gap-4">
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                whileInView={{ height: "250px", opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.2, duration: 0.5, ease: "backOut" }}
-                className="w-64 relative"
-              >
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-500/20 to-gray-600/20 border border-gray-500/30 rounded-t-lg backdrop-blur-sm">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.7 }}
-                    className="absolute -top-16 left-1/2 -translate-x-1/2"
-                  >
-                    <div className="relative">
-                      <div className="w-20 h-20 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm border border-gray-400/50">
-                        <Medal className="w-10 h-10 text-gray-400" />
+              {topParticipants.slice(0, 3).map((participant, index) => (
+                <motion.div
+                  key={participant.position}
+                  initial={{ height: 0, opacity: 0 }}
+                  whileInView={{ height: index === 1 ? "300px" : index === 0 ? "250px" : "200px", opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.2, duration: 0.5, ease: "backOut" }}
+                  className="w-64 relative"
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-t ${index === 0 ? "from-yellow-500/20 to-yellow-600/20 border-yellow-500/30" :
+                    index === 1 ? "from-gray-500/20 to-gray-600/20 border-gray-500/30" :
+                      "from-amber-500/20 to-amber-600/20 border-amber-500/30"
+                    } border rounded-t-lg backdrop-blur-sm`}>
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.5 + index * 0.2 }}
+                      className="absolute -top-16 left-1/2 -translate-x-1/2"
+                    >
+                      <div className="relative">
+                        <div className={`w-${index === 0 ? '24' : '20'} h-${index === 0 ? '24' : '20'} rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm border ${index === 0 ? "border-yellow-400/50" :
+                          index === 1 ? "border-gray-400/50" :
+                            "border-amber-400/50"
+                          }`}>
+                          {getPositionIcon(participant.position)}
+                        </div>
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          whileInView={{ scale: 1 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: 0.7 + index * 0.2 }}
+                          className={`absolute -top-2 -right-2 ${index === 0 ? "bg-yellow-500" :
+                            index === 1 ? "bg-gray-400" :
+                              "bg-amber-600"
+                            } text-black w-8 h-8 rounded-full flex items-center justify-center font-bold`}
+                        >
+                          {participant.position}
+                        </motion.div>
                       </div>
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        whileInView={{ scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.9 }}
-                        className="absolute -top-2 -right-2 bg-gray-400 text-black w-8 h-8 rounded-full flex items-center justify-center font-bold"
-                      >
-                        2
-                      </motion.div>
-                    </div>
-                    <div className="mt-2 text-center">
-                      <h3 className="text-white font-bold">{topParticipants[1].name}</h3>
-                      <p className="text-gray-400">{topParticipants[1].referrals} indicações</p>
-                    </div>
-                  </motion.div>
-                </div>
-                <div className="absolute bottom-0 w-full text-center py-2 bg-gray-500/20 backdrop-blur-sm rounded-t-lg border-t border-gray-400/30">
-                  2º Lugar
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                whileInView={{ height: "300px", opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0, duration: 0.5, ease: "backOut" }}
-                className="w-64 relative"
-              >
-                <div className="absolute inset-0 bg-gradient-to-t from-yellow-500/20 to-yellow-600/20 border border-yellow-500/30 rounded-t-lg backdrop-blur-sm">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.5 }}
-                    className="absolute -top-16 left-1/2 -translate-x-1/2"
-                  >
-                    <div className="relative">
-                      <div className="w-24 h-24 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm border border-yellow-400/50">
-                        <Trophy className="w-12 h-12 text-yellow-500" />
+                      <div className="mt-2 text-center">
+                        <h3 className={`text-white font-bold ${index === 0 ? 'text-xl' : ''}`}>{participant.name}</h3>
+                        <p className={`${index === 0 ? "text-yellow-400 font-semibold" :
+                          index === 1 ? "text-gray-400" :
+                            "text-amber-400"
+                          }`}>{participant.referrals} indicações</p>
                       </div>
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        whileInView={{ scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.7 }}
-                        className="absolute -top-2 -right-2 bg-yellow-500 text-black w-8 h-8 rounded-full flex items-center justify-center font-bold"
-                      >
-                        1
-                      </motion.div>
-                    </div>
-                    <div className="mt-2 text-center">
-                      <h3 className="text-white font-bold text-xl">{topParticipants[0].name}</h3>
-                      <p className="text-yellow-400 font-semibold">{topParticipants[0].referrals} indicações</p>
-                    </div>
-                  </motion.div>
-                </div>
-                <div className="absolute bottom-0 w-full text-center py-2 bg-yellow-500/20 backdrop-blur-sm rounded-t-lg border-t border-yellow-400/30">
-                  1º Lugar
-                </div>
-              </motion.div>
-
-              {/* Third Place */}
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                whileInView={{ height: "200px", opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.4, duration: 0.5, ease: "backOut" }}
-                className="w-64 relative"
-              >
-                <div className="absolute inset-0 bg-gradient-to-t from-amber-500/20 to-amber-600/20 border border-amber-500/30 rounded-t-lg backdrop-blur-sm">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.9 }}
-                    className="absolute -top-16 left-1/2 -translate-x-1/2"
-                  >
-                    <div className="relative">
-                      <div className="w-20 h-20 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm border border-amber-400/50">
-                        <Medal className="w-10 h-10 text-amber-600" />
-                      </div>
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        whileInView={{ scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 1.1 }}
-                        className="absolute -top-2 -right-2 bg-amber-600 text-black w-8 h-8 rounded-full flex items-center justify-center font-bold"
-                      >
-                        3
-                      </motion.div>
-                    </div>
-                    <div className="mt-2 text-center">
-                      <h3 className="text-white font-bold">{topParticipants[2].name}</h3>
-                      <p className="text-amber-400">{topParticipants[2].referrals} indicações</p>
-                    </div>
-                  </motion.div>
-                </div>
-                <div className="absolute bottom-0 w-full text-center py-2 bg-amber-500/20 backdrop-blur-sm rounded-t-lg border-t border-amber-400/30">
-                  3º Lugar
-                </div>
-              </motion.div>
+                    </motion.div>
+                  </div>
+                  <div className={`absolute bottom-0 w-full text-center py-2 ${index === 0 ? "bg-yellow-500/20 border-yellow-400/30" :
+                    index === 1 ? "bg-gray-500/20 border-gray-400/30" :
+                      "bg-amber-500/20 border-amber-400/30"
+                    } backdrop-blur-sm rounded-t-lg border-t`}>
+                    {participant.position}º Lugar
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </div>
 
           <motion.div
-            variants={staggerChildren}
+            variants={{
+              initial: { opacity: 0 },
+              animate: { opacity: 1, transition: { staggerChildren: 0.1 } }
+            }}
             initial="initial"
             whileInView="animate"
             viewport={{ once: true }}
@@ -302,8 +268,11 @@ export default function Home() {
           >
             {topParticipants.slice(3).map((participant, index) => (
               <motion.div
-                key={index}
-                variants={fadeInUp}
+                key={participant.position}
+                variants={{
+                  initial: { opacity: 0, y: 20 },
+                  animate: { opacity: 1, y: 0 }
+                }}
                 whileHover={{ scale: 1.02, x: 10 }}
                 className="relative overflow-hidden rounded-xl p-6 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20"
               >
@@ -351,7 +320,6 @@ export default function Home() {
 
       <div className="py-24 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Título da Seção */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
