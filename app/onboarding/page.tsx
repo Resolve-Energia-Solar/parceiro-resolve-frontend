@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "../../hooks/useUser";
-import { signUpWithCpfAndBirthDate, signInWithCpfAndBirthDate } from "../../services/auth/authService";
+import { signUpWithCpfAndBirthDate, signInWithCpfAndBirthDate, resendConfirmationEmail } from "../../services/auth/authService";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { toast, ToastContainer } from "react-toastify";
@@ -15,7 +15,7 @@ export default function OnboardingPage() {
   const router = useRouter();
   const { user } = useUser();
 
-  const [step, setStep] = useState<"start" | "login" | "register">("start");
+  const [step, setStep] = useState<"start" | "login" | "register" | "confirmation">("start");
   const [formData, setFormData] = useState({
     name: "",
     cpf: "",
@@ -58,7 +58,7 @@ export default function OnboardingPage() {
           toast.success("Login realizado com sucesso!");
           router.replace("/dashboard");
         }
-      } else {
+      } else if (step === "register") {
         if (!formData.name || !formData.cpf || !formData.birthDate || !formData.email || !formData.telefone || !formData.password || !formData.confirmPassword) {
           toast.error("Todos os campos são obrigatórios.");
           return;
@@ -72,16 +72,26 @@ export default function OnboardingPage() {
           email: formData.email,
           cpf: formData.cpf,
           birthDate: formData.birthDate,
-          password: formData.password,
           telefone: formData.telefone,
         });
         if (newUser) {
-          toast.success("Cadastro realizado com sucesso! Faça login.");
-          setStep("login");
+          setStep("confirmation");
         }
       }
     } catch (error: any) {
       toast.error("Erro: " + error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    setIsLoading(true);
+    try {
+      await resendConfirmationEmail(formData.email);
+      toast.success("E-mail de confirmação reenviado com sucesso!");
+    } catch (error: any) {
+      toast.error("Erro ao reenviar e-mail: " + error.message);
     } finally {
       setIsLoading(false);
     }
@@ -172,6 +182,29 @@ export default function OnboardingPage() {
               {isLoading ? "Processando..." : (step === "login" ? "Entrar" : "Cadastrar")}
             </Button>
           </>
+        )}
+        {step === "confirmation" && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            <h2 className="text-2xl font-bold mb-4 text-yellow-400">Confirmação de Conta</h2>
+            <p className="mb-4">
+              Um e-mail de confirmação foi enviado para {formData.email}. 
+              Por favor, verifique sua caixa de entrada e clique no link de confirmação para ativar sua conta.
+            </p>
+            <p className="mb-4">
+              Não recebeu o e-mail? Verifique sua pasta de spam ou clique abaixo para reenviar.
+            </p>
+            <Button 
+              onClick={handleResendConfirmation} 
+              disabled={isLoading}
+              className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 rounded-lg"
+            >
+              {isLoading ? "Reenviando..." : "Reenviar E-mail de Confirmação"}
+            </Button>
+          </motion.div>
         )}
       </motion.div>
       <ToastContainer />

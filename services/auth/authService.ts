@@ -1,5 +1,4 @@
 import { supabase } from "@/lib/supabase";
-import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from 'uuid';
 
 const formatCpf = (cpf: string) => cpf.replace(/\D/g, "");
@@ -10,7 +9,6 @@ export async function signUpWithCpfAndBirthDate({
   email,
   cpf,
   birthDate,
-  password,
   telefone,
   isSuperAdmin = false,
 }: {
@@ -18,7 +16,6 @@ export async function signUpWithCpfAndBirthDate({
   email: string;
   cpf: string;
   birthDate: string;
-  password: string;
   telefone: string;
   isSuperAdmin?: boolean;
 }) {
@@ -28,11 +25,22 @@ export async function signUpWithCpfAndBirthDate({
 
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
-      password,
+      password: birthDate,
+      options: {
+        data: {
+          name: name,
+          cpf: formattedCpf,
+          birthdate: formattedBirthDate,
+          telefone: telefone,
+        },
+      },
     });
 
     if (authError) throw new Error(authError.message);
     if (!authData.user) throw new Error("Erro ao criar usuário na autenticação");
+
+    const sharingCode = uuidv4();
+    const referralCode = generateReferralCode();
 
     const { data: userData, error: userError } = await supabase
       .from("users")
@@ -45,8 +53,8 @@ export async function signUpWithCpfAndBirthDate({
           birthdate: formattedBirthDate,
           telefone,
           is_super_admin: isSuperAdmin,
-          sharing_code: uuidv4(),
-          referral_code: generateReferralCode(),
+          sharing_code: sharingCode,
+          referral_code: referralCode,
           referral_count: 0,
           total_referral_earnings: 0,
         },
@@ -54,7 +62,11 @@ export async function signUpWithCpfAndBirthDate({
       .select()
       .single();
 
-    if (userError) throw new Error(userError.message);
+    if (userError) {
+      throw new Error(userError.message);
+    }
+
+    await logUserActivity(authData.user.id, 'signup', 'New user registration');
 
     return { authUser: authData.user, userData };
   } catch (error) {
@@ -62,34 +74,49 @@ export async function signUpWithCpfAndBirthDate({
   }
 }
 
-
-
 export async function signInWithCpfAndBirthDate(cpf: string, birthDate: string) {
   try {
     const formattedCpf = formatCpf(cpf);
     const formattedBirthDate = formatBirthDate(birthDate);
 
+    console.log('Tentando login com:', { cpf: formattedCpf, birthDate: formattedBirthDate });
+
     const { data: user, error } = await supabase
       .from("users")
-      .select("*")
+      .select("email, id")
       .eq("cpf", formattedCpf)
       .eq("birthdate", formattedBirthDate)
       .single();
 
-    if (error || !user) throw new Error("CPF ou data de nascimento inválidos");
+    if (error || !user) {
+      console.error('Usuário não encontrado:', error);
+      throw new Error("CPF ou data de nascimento inválidos");
+    }
 
-    const { error: authError } = await supabase.auth.signInWithPassword({
+    console.log('Usuário encontrado:', user);
+
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
       email: user.email,
-      password: user.password,
+      password: birthDate,
     });
 
-    if (authError) throw new Error(authError.message);
+    if (signInError) {
+      console.error('Erro de login:', signInError);
+      throw new Error("Falha na autenticação. Verifique suas credenciais.");
+    }
+
+    if (!data.user) {
+      throw new Error("Usuário não encontrado após autenticação");
+    }
+
+    console.log('Login bem-sucedido:', data.user);
 
     await logUserActivity(user.id, 'login', 'User logged in');
 
-    return user;
+    return { ...data.user, ...user };
   } catch (error) {
-    throw new Error(`Erro no login: ${error}`);
+    console.error('Erro no login:', error);
+    throw error;
   }
 }
 
@@ -129,6 +156,22 @@ export async function resetPassword(email: string) {
     return true;
   } catch (error) {
     throw new Error(`Erro ao redefinir senha: ${error}`);
+  }
+}
+
+export async function resendConfirmationEmail(email: string) {
+  try {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email,
+    });
+
+    if (error) throw error;
+
+    return true;
+  } catch (error) {
+    console.error('Erro ao reenviar e-mail de confirmação:', error);
+    throw error;
   }
 }
 

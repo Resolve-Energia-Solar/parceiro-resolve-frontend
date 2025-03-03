@@ -8,52 +8,58 @@ export const useDashboardData = () => {
     users: 0,
     disqualified: 0,
     signedContracts: 0,
-    referenceLink: "", 
+    referenceLink: "",
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
+      try {
+        setLoading(true);
 
-      const { data: referralsData, error: referralsError } = await supabase
-        .from('referrals')
-        .select('*');
-      const referralsCount = referralsData ? referralsData.length : 0;
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          throw new Error("Usuário não encontrado");
+        }
 
-      const { data: rewardsData, error: rewardsError } = await supabase
-        .from('rewards')
-        .select('*');
-      const rewardsCount = rewardsData ? rewardsData.length : 0;
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('*')  
+          .eq('id', user.id)
+          .single();
 
-      const { data: usersData, error: usersError } = await supabase
-        .from('users')
-        .select('*');
-      const usersCount = usersData ? usersData.length : 0;
+        if (userError) throw userError;
 
-      const { data: usersLogData, error: usersLogError } = await supabase
-        .from('users_log')
-        .select('*')
-        .eq('action', 'disqualified');
-      const disqualifiedCount = usersLogData ? usersLogData.length : 0;
+        const baseUrl = window.location.origin;
+        const referenceLink = userData?.referral_code 
+          ? `${baseUrl}/referral/${userData.referral_code}`
+          : "";
 
-      const { data: signedContractsData, error: signedContractsError } = await supabase
-        .from('users_log')
-        .select('*')
-        .eq('action', 'signed_contract');
-      const signedContractsCount = signedContractsData ? signedContractsData.length : 0;
+        console.log("userData:", userData); 
+        console.log("referral_code:", userData?.referral_code); 
+        console.log("referenceLink:", referenceLink); 
 
-      const referenceLink = usersData && usersData.length > 0 ? `https://www.resolve.com/referral/${usersData[0].id}` : "";
+        const [referralsData, rewardsData, usersLogDisqualified, usersLogSigned] = await Promise.all([
+          supabase.from('referrals').select('*', { count: 'exact' }).eq('referrer_id', user.id),
+          supabase.from('rewards').select('*', { count: 'exact' }).eq('user_id', user.id),
+          supabase.from('users_log').select('*', { count: 'exact' }).eq('user_id', user.id).eq('action', 'disqualified'),
+          supabase.from('users_log').select('*', { count: 'exact' }).eq('user_id', user.id).eq('action', 'signed_contract')
+        ]);
 
-      setData({
-        referrals: referralsCount,
-        rewards: rewardsCount,
-        users: usersCount,
-        disqualified: disqualifiedCount,
-        signedContracts: signedContractsCount,
-        referenceLink, 
-      });
-      setLoading(false);
+        setData({
+          referrals: referralsData.count || 0,
+          rewards: rewardsData.count || 0,
+          users: 1,
+          disqualified: usersLogDisqualified.count || 0,
+          signedContracts: usersLogSigned.count || 0,
+          referenceLink,
+        });
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchData();
