@@ -72,54 +72,103 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto">
-        <Header />
-        <h1 className="text-2xl font-bold mb-6">Painel de Administração - Indicações</h1>
-        {isLoading ? (
-          <p>Carregando indicações...</p>
-        ) : (
-          <div className="bg-white shadow overflow-hidden sm:rounded-md">
-            <ul className="divide-y divide-gray-200">
-              {referrals.map((referral) => (
-                <li key={referral.id} className="px-6 py-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-indigo-600">
-                        Indicador: {referral.referrer.name} ({referral.referrer.email})
-                      </p>
-                      <p className="mt-1 text-sm text-gray-500">
-                        Indicado: {referral.referred_user.name} ({referral.referred_user.email})
-                      </p>
-                      <p className="mt-1 text-sm text-gray-500">
-                        Status: {referral.status}
-                      </p>
-                      <p className="mt-1 text-xs text-gray-400">
-                        Data: {new Date(referral.created_at).toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button
-                        onClick={() => updateReferralStatus(referral.id, 'approved')}
-                        disabled={referral.status === 'approved'}
-                        className="bg-green-500 hover:bg-green-600 text-white"
-                      >
-                        Aprovar
-                      </Button>
-                      <Button
-                        onClick={() => updateReferralStatus(referral.id, 'rejected')}
-                        disabled={referral.status === 'rejected'}
-                        className="bg-red-500 hover:bg-red-600 text-white"
-                      >
-                        Rejeitar
-                      </Button>
+    <div className="min-h-screen bg-black text-white">
+      <Header />
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-[#1A1A1A] shadow-xl rounded-lg overflow-hidden border border-[#333]">
+          <div className="bg-[#FFC700] text-black px-6 py-4">
+            <h1 className="text-2xl font-bold">Painel de Administração - Indicações</h1>
+          </div>
+          
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <p className="text-gray-400">Carregando indicações...</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-[#333]">
+              {referrals.length === 0 ? (
+                <div className="text-center py-8 text-gray-400">
+                  Nenhuma indicação encontrada
+                </div>
+              ) : (
+                referrals.map((referral) => (
+                  <div 
+                    key={referral.id} 
+                    className="px-6 py-4 hover:bg-[#222] transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-[#FFC700]">
+                          Indicador: {referral.referrer.name}
+                        </p>
+                        <p className="text-sm text-gray-300">
+                          {referral.referrer.email}
+                        </p>
+                        <p className="mt-2 text-sm text-[#FFC700]">
+                          Indicado: {referral.referred_user.name}
+                        </p>
+                        <p className="text-sm text-gray-300">
+                          {referral.referred_user.email}
+                        </p>
+                        <div className="mt-2">
+                          <span 
+                            className={`px-2 py-1 rounded-full text-xs font-semibold 
+                              ${
+                                referral.status === 'pending' 
+                                  ? 'bg-yellow-800 text-yellow-300'
+                                  : referral.status === 'approved'
+                                  ? 'bg-green-800 text-green-300'
+                                  : 'bg-red-800 text-red-300'
+                              }`}
+                          >
+                            {referral.status === 'pending' 
+                              ? 'Pendente' 
+                              : referral.status === 'approved' 
+                              ? 'Aprovado' 
+                              : 'Rejeitado'}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-xs text-gray-500">
+                          {new Date(referral.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button
+                          onClick={() => updateReferralStatus(referral.id, 'approved')}
+                          disabled={referral.status === 'approved'}
+                          className={`
+                            ${
+                              referral.status === 'approved'
+                                ? 'bg-green-900 text-green-500 cursor-not-allowed'
+                                : 'bg-[#FFC700] text-black hover:bg-yellow-500'
+                            } 
+                            px-4 py-2 rounded-md transition-colors font-bold
+                          `}
+                        >
+                          Aprovar
+                        </Button>
+                        <Button
+                          onClick={() => updateReferralStatus(referral.id, 'rejected')}
+                          disabled={referral.status === 'rejected'}
+                          className={`
+                            ${
+                              referral.status === 'rejected'
+                                ? 'bg-red-900 text-red-500 cursor-not-allowed'
+                                : 'bg-red-700 text-white hover:bg-red-600'
+                            } 
+                            px-4 py-2 rounded-md transition-colors font-bold
+                          `}
+                        >
+                          Rejeitar
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+                ))
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
