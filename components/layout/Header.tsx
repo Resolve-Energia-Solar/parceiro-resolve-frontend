@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
 import { useUser } from "../../hooks/useUser";
-import { Bell, LogOut, User } from "lucide-react";
+import { Bell, LogOut, User, ShieldCheck } from "lucide-react";
 import { signOut } from "../../services/auth/authService";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -48,6 +48,8 @@ export function Header({ className }: HeaderProps) {
     router.push('/onboarding');
   };
 
+  const isAdminOrSDR = user && (user.user_type === 'Admin' || user.user_type === 'SDR');
+
   return (
     <motion.header
       initial={{ opacity: 0, y: -20 }}
@@ -82,9 +84,24 @@ export function Header({ className }: HeaderProps) {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3, duration: 0.5 }}
           >
+            {isAdminOrSDR && (
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Link 
+                  href="/admin" 
+                  className="flex items-center gap-2 bg-indigo-600/20 text-indigo-400 px-3 py-2 rounded-full hover:bg-indigo-600/30 transition-colors"
+                >
+                  <ShieldCheck className="w-5 h-5" />
+                  <span className="text-sm font-medium">Painel</span>
+                </Link>
+              </motion.div>
+            )}
+
             <div className="relative" ref={notificationsRef}>
               <Bell
-                className="w-6 h-6 cursor-pointer"
+                className="w-6 h-6 cursor-pointer text-gray-300 hover:text-white transition-colors"
                 onClick={() => setShowNotifications(!showNotifications)}
               />
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
@@ -114,12 +131,15 @@ export function Header({ className }: HeaderProps) {
                   <p className="px-4 py-2 text-sm text-gray-300">
                     Olá, {user ? user.name : 'Visitante'}
                   </p>
-                  {/* <Link href="/profile" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">
-                    Perfil
-                  </Link> */}
-                  {/* <Link href="/settings" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">
-                    Configurações
-                  </Link> */}
+                  {isAdminOrSDR && (
+                    <Link 
+                      href="/admin" 
+                      className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                    >
+                      <ShieldCheck className="w-4 h-4 inline mr-2" />
+                      Painel Administrativo
+                    </Link>
+                  )}
                   <button
                     onClick={handleSignOut}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
