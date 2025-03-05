@@ -6,7 +6,13 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-toastify";
-import { Loader2, Filter, ArrowUpDown } from "lucide-react";
+import { 
+  Loader2, 
+  Search, 
+  Filter, 
+  CheckCircle, 
+  XCircle 
+} from "lucide-react";
 import { useUser } from "@/hooks/useUser";
 import {
   Select,
@@ -69,9 +75,9 @@ export default function AdminPage() {
   };
 
   const statusColors = {
-    'pending': 'bg-yellow-800 text-yellow-300',
-    'approved': 'bg-green-800 text-green-300',
-    'rejected': 'bg-red-800 text-red-300'
+    'pending': 'bg-indigo-900 text-indigo-300',
+    'approved': 'bg-emerald-900 text-emerald-300',
+    'rejected': 'bg-rose-900 text-rose-300'
   };
 
   useEffect(() => {
@@ -80,7 +86,6 @@ export default function AdminPage() {
         const unitsResponse = await supabase
           .from('units')
           .select('*')
-          .eq('active', true)
           .order('name');
 
         if (unitsResponse.error) throw unitsResponse.error;
@@ -170,53 +175,78 @@ export default function AdminPage() {
 
   if (isInitialLoading) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <Loader2 className="animate-spin text-yellow-400" size={48} />
+      <div className="min-h-screen bg-gradient-to-br from-[#121212] to-[#1E1E1E] text-white flex items-center justify-center">
+        <Loader2 className="animate-spin text-indigo-500" size={48} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-gradient-to-br from-[#121212] to-[#1E1E1E] text-white">
       <Header />
       <div className="container mx-auto px-4 py-8">
-        <div className="bg-[#1A1A1A] shadow-xl rounded-lg overflow-hidden border border-[#333]">
-          <div className="bg-[#FFC700] text-black px-6 py-4 flex justify-between items-center">
-            <h1 className="text-2xl font-bold">Painel de Administração - Indicações</h1>
-            <div className="flex space-x-2">
-              <Input 
-                placeholder="Buscar por nome" 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-[200px]"
-              />
+        <div className="bg-[#1E1E1E] shadow-2xl rounded-2xl overflow-hidden border border-[#333]">
+          <div className="bg-[#2C2C2C] text-white px-6 py-5 flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <h1 className="text-2xl font-bold text-gray-100">Painel de Administração</h1>
+              <span className="text-sm bg-indigo-600 text-white px-3 py-1 rounded-full">
+                Indicações
+              </span>
+            </div>
+            
+            <div className="flex space-x-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <Input 
+                  placeholder="Buscar por nome" 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 bg-[#3A3A3A] border-[#444] text-white placeholder-gray-400 w-[250px]"
+                />
+              </div>
+
               <Select 
                 value={selectedUnit} 
                 onValueChange={setSelectedUnit}
               >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filtrar por Unidade" />
+                <SelectTrigger className="w-[200px] bg-[#3A3A3A] border-[#444] text-white">
+                  <Filter className="mr-2 text-gray-400" size={16} />
+                  <SelectValue placeholder="Unidade" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as Unidades</SelectItem>
+                <SelectContent className="bg-[#2C2C2C] border-[#444]">
+                  <SelectItem value="all" className="text-white hover:bg-[#3C3C3C]">
+                    Todas as Unidades
+                  </SelectItem>
                   {units.map(unit => (
-                    <SelectItem key={unit.id} value={unit.id}>
+                    <SelectItem 
+                      key={unit.id} 
+                      value={unit.id} 
+                      className="text-white hover:bg-[#3C3C3C]"
+                    >
                       {unit.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+
               <Select 
                 value={selectedStatus} 
                 onValueChange={setSelectedStatus}
               >
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-[180px] bg-[#3A3A3A] border-[#444] text-white">
+                  <Filter className="mr-2 text-gray-400" size={16} />
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os Status</SelectItem>
+                <SelectContent className="bg-[#2C2C2C] border-[#444]">
+                  <SelectItem value="all" className="text-white hover:bg-[#3C3C3C]">
+                    Todos os Status
+                  </SelectItem>
                   {Object.entries(statusLabels).map(([key, label]) => (
-                    <SelectItem key={key} value={key}>
+                    <SelectItem 
+                      key={key} 
+                      value={key} 
+                      className="text-white hover:bg-[#3C3C3C]"
+                    >
                       {label}
                     </SelectItem>
                   ))}
@@ -227,34 +257,28 @@ export default function AdminPage() {
           
           <div className="divide-y divide-[#333]">
             {currentReferrals.length === 0 ? (
-              <div className="text-center py-8 text-gray-400">
+              <div className="text-center py-8 text-gray-500 bg-[#1E1E1E]">
                 Nenhuma indicação encontrada
               </div>
             ) : (
               currentReferrals.map((referral) => (
                 <div 
                   key={referral.id} 
-                  className="px-6 py-4 hover:bg-[#222] transition-colors"
+                  className="px-6 py-4 hover:bg-[#2A2A2A] transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-[#FFC700]">
+                      <p className="text-sm font-medium text-indigo-400">
                         Indicador: {referral.referrer.name}
                       </p>
                       <p className="text-sm text-gray-300">
-                        {referral.referrer.email} 
-                        <span className="ml-2 text-xs text-gray-500">
-                          {referral.referrer.unit.name} 
-                        </span>
+                        {referral.referrer.email}
                       </p>
-                      <p className="mt-2 text-sm text-[#FFC700]">
+                      <p className="mt-2 text-sm text-indigo-400">
                         Indicado: {referral.referred_user.name}
                       </p>
                       <p className="text-sm text-gray-300">
                         {referral.referred_user.email}
-                        <span className="ml-2 text-xs text-gray-500">
-                          {referral.referred_user.unit.name}
-                        </span>
                       </p>
                       <div className="mt-2">
                         <span 
@@ -275,8 +299,8 @@ export default function AdminPage() {
                         className={`
                           ${
                             referral.status === 'approved'
-                              ? 'bg-green-900 text-green-500 cursor-not-allowed'
-                              : 'bg-[#FFC700] text-black hover:bg-yellow-500'
+                              ? 'bg-emerald-900 text-emerald-500 cursor-not-allowed'
+                              : 'bg-emerald-600 text-white hover:bg-emerald-700'
                           } 
                           px-4 py-2 rounded-md transition-colors font-bold
                         `}
@@ -289,8 +313,8 @@ export default function AdminPage() {
                         className={`
                           ${
                             referral.status === 'rejected'
-                              ? 'bg-red-900 text-red-500 cursor-not-allowed'
-                              : 'bg-red-700 text-white hover:bg-red-600'
+                              ? 'bg-rose-900 text-rose-500 cursor-not-allowed'
+                              : 'bg-rose-600 text-white hover:bg-rose-700'
                           } 
                           px-4 py-2 rounded-md transition-colors font-bold
                         `}
@@ -304,7 +328,7 @@ export default function AdminPage() {
             )}
           </div>
 
-          <div className="flex justify-between items-center p-4">
+          <div className="flex justify-between items-center p-4 bg-[#2C2C2C]">
             <div className="text-sm text-gray-400">
               Mostrando {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, filteredReferrals.length)} de {filteredReferrals.length}
             </div>
@@ -313,6 +337,7 @@ export default function AdminPage() {
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
                 variant="outline"
+                className="bg-[#3A3A3A] text-white hover:bg-[#4A4A4A]"
               >
                 Anterior
               </Button>
@@ -324,6 +349,7 @@ export default function AdminPage() {
                 )}
                 disabled={currentPage >= Math.ceil(filteredReferrals.length / itemsPerPage)}
                 variant="outline"
+                className="bg-[#3A3A3A] text-white hover:bg-[#4A4A4A]"
               >
                 Próximo
               </Button>
