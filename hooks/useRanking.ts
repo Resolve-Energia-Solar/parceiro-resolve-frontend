@@ -1,8 +1,12 @@
-'use client';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
-import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
-import { RankingUser } from '../types';
+interface RankingUser {
+  id: string;
+  name: string;
+  referral_count: number;
+  user_type: string;
+}
 
 export function useRanking() {
   const [ranking, setRanking] = useState<RankingUser[]>([]);
@@ -10,28 +14,23 @@ export function useRanking() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchRanking = async () => {
+    async function fetchRanking() {
       try {
-        setLoading(true);
         const { data, error } = await supabase
           .from('users')
-          .select('id, name, referral_count')
+          .select('id, name, referral_count, user_type')
+          .in('user_type', ['Parceiro', 'Admin', 'SDR'])
           .order('referral_count', { ascending: false });
 
         if (error) throw error;
 
-        const rankingWithPosition = data.map((user, index) => ({
-          ...user,
-          position: index + 1,
-        }));
-
-        setRanking(rankingWithPosition);
-      } catch (error: any) {
-        setError(error.message);
-      } finally {
+        setRanking(data || []);
+        setLoading(false);
+      } catch (err: any) {
+        setError(err.message);
         setLoading(false);
       }
-    };
+    }
 
     fetchRanking();
   }, []);
