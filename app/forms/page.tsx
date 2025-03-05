@@ -13,13 +13,10 @@ import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { format } from "date-fns";
 
-// Esquema de validação
 const formSchema = z.object({
   name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
   email: z.string().email("Email inválido"),
-  cpf: z.string().regex(/^\d{11}$/, "CPF deve ter 11 dígitos"),
   birthdate: z.string().refine((date) => {
     const today = new Date();
     const birthDate = new Date(date);
@@ -95,7 +92,6 @@ export default function FormsPage() {
     resolver: zodResolver(formSchema),
   });
 
-  // Buscar nome do indicador
   useEffect(() => {
     async function fetchReferrerName() {
       if (referralCode) {
