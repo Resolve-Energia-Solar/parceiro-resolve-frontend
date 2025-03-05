@@ -631,15 +631,16 @@ export default function Home() {
               <h3 className="text-lg font-semibold mb-4">Contato</h3>
               <div className="flex items-center space-x-3 text-gray-400">
                 <Phone className="w-5 h-5" />
-                <span>(85) 3051-3590</span>
+                <span>40048688</span>
               </div>
               <div className="flex items-center space-x-3 text-gray-400">
                 <Mail className="w-5 h-5" />
-                <span>contato@resolve.com.br</span>
+                <span> ouvidoria@resolvenergiasolar.com</span>
               </div>
               <div className="flex items-center space-x-3 text-gray-400">
                 <MapPin className="w-5 h-5" />
-                <span>Av. Santos Dumont, 2828 - Aldeota, Fortaleza - CE</span>
+                <span>Av. Senador Lemos, 3809
+                Esquina com Alferes Costa</span>
               </div>
             </motion.div>
 

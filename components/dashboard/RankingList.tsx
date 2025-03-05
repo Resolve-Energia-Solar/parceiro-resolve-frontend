@@ -6,6 +6,31 @@ import { motion } from "framer-motion";
 import { Trophy, Medal, Sun } from "lucide-react";
 import { useState } from "react";
 
+const iphoneVariants = {
+  hidden: { opacity: 0, scale: 0.8 },
+  visible: { 
+    opacity: 1, 
+    scale: 1,
+    transition: {
+      duration: 0.5,
+      yoyo: Infinity,
+      repeatDelay: 1
+    }
+  }
+};
+
+const highlightVariants = {
+  initial: { backgroundColor: "rgba(234, 179, 8, 0.3)" },
+  animate: { 
+    backgroundColor: ["rgba(234, 179, 8, 0.3)", "rgba(234, 179, 8, 0.7)", "rgba(234, 179, 8, 0.3)"],
+    transition: {
+      duration: 1.5,
+      repeat: Infinity,
+      repeatType: "reverse" as const
+    }
+  }
+};
+
 export function RankingList() {
   const { user } = useUser();
   const { ranking, loading, error } = useRanking();
@@ -39,6 +64,16 @@ export function RankingList() {
       className="max-w-3xl mx-auto p-6 bg-black rounded-lg shadow-xl"
     >
       <h2 className="text-3xl font-bold mb-8 text-yellow-400 text-center">Ranking de Indicações</h2>
+      {userRank > 0 && (
+        <motion.div
+          variants={highlightVariants}
+          initial="initial"
+          animate="animate"
+          className="mb-4 p-3 rounded-lg text-center font-bold text-yellow-400"
+        >
+          Sua posição atual: {userRank}º lugar
+        </motion.div>
+      )}
       <div className="space-y-4">
         {displayedRanking.map((rankUser, index) => (
           <motion.div
@@ -67,16 +102,18 @@ export function RankingList() {
                   </p>
                 </div>
               </div>
-              {index < 3 && (
-                <motion.div
-                  whileHover={{ scale: 1.2 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  {index === 0 && <Trophy className="w-8 h-8 text-yellow-400" />}
-                  {index === 1 && <Medal className="w-8 h-8 text-gray-300" />}
-                  {index === 2 && <Medal className="w-8 h-8 text-yellow-600" />}
-                </motion.div>
-              )}
+              <div className="flex items-center gap-2">
+                {index < 3 && (
+                  <motion.div
+                    whileHover={{ scale: 1.2 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    {index === 0 && <Trophy className="w-8 h-8 text-yellow-400" />}
+                    {index === 1 && <Medal className="w-8 h-8 text-gray-300" />}
+                    {index === 2 && <Medal className="w-8 h-8 text-yellow-600" />}
+                  </motion.div>
+                )}
+              </div>
             </div>
           </motion.div>
         ))}
@@ -90,11 +127,6 @@ export function RankingList() {
         >
           Ver todos os usuários
         </motion.button>
-      )}
-      {user && (
-        <div className="mt-8 text-center text-yellow-400">
-          {userRank > 0 ? `Você está na posição ${userRank}` : 'Você não está no ranking.'}
-        </div>
       )}
     </motion.div>
   );

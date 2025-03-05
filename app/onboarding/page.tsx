@@ -3,13 +3,18 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "../../hooks/useUser";
-import { signUpWithCpfAndBirthDate, signInWithCpfAndBirthDate, resendConfirmationEmail } from "../../services/auth/authService";
+import { 
+  signUpAsClient, 
+  signInWithCpfAndBirthDate, 
+  resendConfirmationEmail 
+} from "../../services/auth/authService";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Calendar, FileText, Lock, User, Mail, Phone } from "lucide-react";
 import Image from "next/image";
+import InputMask from 'react-input-mask';
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -24,6 +29,7 @@ export default function OnboardingPage() {
     telefone: "",
     password: "",
     confirmPassword: "",
+    unit: "" 
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -42,42 +48,91 @@ export default function OnboardingPage() {
   if (!isClient) return null;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev, 
+      [name]: name === 'cpf' 
+        ? value.replace(/\D/g, '') 
+        : value
+    }));
+  };
+
+  const validateForm = () => {
+    const { name, cpf, birthDate, email, telefone, password, confirmPassword, unit } = formData;
+    
+    if (step === "register") {
+      if (!name.trim()) {
+        toast.error("Nome é obrigatório");
+        return false;
+      }
+
+      if (cpf.length !== 11) {
+        toast.error("CPF inválido");
+        return false;
+      }
+
+      if (!birthDate) {
+        toast.error("Data de nascimento é obrigatória");
+        return false;
+      }
+
+      if (!email.trim() || !email.includes('@')) {
+        toast.error("E-mail inválido");
+        return false;
+      }
+
+      if (telefone.length < 10) {
+        toast.error("Telefone inválido");
+        return false;
+      }
+
+      if (!unit.trim()) {
+        toast.error("Unidade é obrigatória");
+        return false;
+      }
+
+      if (password !== confirmPassword) {
+        toast.error("As senhas não coincidem");
+        return false;
+      }
+    }
+
+    if (step === "login") {
+      if (!cpf || !birthDate) {
+        toast.error("CPF e data de nascimento são obrigatórios");
+        return false;
+      }
+    }
+
+    return true;
   };
 
   const handleAuth = async () => {
     setIsLoading(true);
     try {
+      if (!validateForm()) return;
+
       if (step === "login") {
-        if (!formData.cpf || !formData.birthDate) {
-          toast.error("Por favor, preencha CPF e data de nascimento.");
-          return;
-        }
         const user = await signInWithCpfAndBirthDate(formData.cpf, formData.birthDate);
         if (user) {
           toast.success("Login realizado com sucesso!");
-          if (user.user_metadata?.is_super_admin) {
+          if (user.app_metadata.user_type === "Admin") {
             router.replace("/admin"); 
           } else {
             router.replace("/dashboard");
           }
         }
       } else if (step === "register") {
-        if (!formData.name || !formData.cpf || !formData.birthDate || !formData.email || !formData.telefone || !formData.password || !formData.confirmPassword) {
-          toast.error("Todos os campos são obrigatórios.");
-          return;
-        }
-        if (formData.password !== formData.confirmPassword) {
-          toast.error("As senhas não coincidem.");
-          return;
-        }
-        const newUser = await signUpWithCpfAndBirthDate({
+        const newUser = await signUpAsClient({
           name: formData.name,
           email: formData.email,
           cpf: formData.cpf,
           birthDate: formData.birthDate,
           telefone: formData.telefone,
+          unit: formData.unit,
+          isSuperAdmin: false
         });
+        
         if (newUser) {
           setStep("confirmation");
         }
@@ -88,7 +143,6 @@ export default function OnboardingPage() {
       setIsLoading(false);
     }
   };
-  
 
   const handleResendConfirmation = async () => {
     setIsLoading(true);
@@ -104,8 +158,13 @@ export default function OnboardingPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-6">
-      <Image src="https://fortaleza-aldeota.resolvenergiasolar.com/wp-content/uploads/2024/11/Logo-resolve-1024x279.webp"
-        alt="Logo" width={150} height={50} className="mb-6" />
+      <Image 
+        src="https://fortaleza-aldeota.resolvenergiasolar.com/wp-content/uploads/2024/11/Logo-resolve-1024x279.webp"
+        alt="Logo" 
+        width={150} 
+        height={50} 
+        className="mb-6" 
+      />
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -123,10 +182,16 @@ export default function OnboardingPage() {
               Você já é cliente?
             </motion.h2>
             <div className="flex flex-col gap-4">
-              <Button onClick={() => setStep("login")} className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 rounded-lg flex items-center justify-center gap-2">
+              <Button 
+                onClick={() => setStep("login")} 
+                className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 rounded-lg flex items-center justify-center gap-2"
+              >
                 <User size={20} /> Sim, já sou cliente
               </Button>
-              <Button onClick={() => setStep("register")} className="w-full bg-gray-700 hover:bg-gray-800 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2">
+              <Button 
+                onClick={() => setStep("register")} 
+                className="w-full bg-gray-700 hover:bg-gray-800 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2"
+              >
                 <User size={20} /> Não, quero me cadastrar
               </Button>
             </div>
@@ -134,7 +199,12 @@ export default function OnboardingPage() {
         )}
         {(step === "login" || step === "register") && (
           <>
-            <motion.h2 initial={{ x: -50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.4 }} className="text-3xl font-bold mb-6 text-yellow-400">
+            <motion.h2 
+              initial={{ x: -50, opacity: 0 }} 
+              animate={{ x: 0, opacity: 1 }} 
+              transition={{ duration: 0.4 }} 
+              className="text-3xl font-bold mb-6 text-yellow-400"
+            >
               {step === "login" ? "Faça seu Login" : "Crie sua Conta"}
             </motion.h2>
             <div className="flex flex-col gap-4">
@@ -142,11 +212,26 @@ export default function OnboardingPage() {
                 <>
                   <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
                     <FileText size={20} className="mr-2 text-yellow-400" />
-                    <input type="text" name="cpf" placeholder="CPF" className="w-full bg-transparent text-white outline-none" value={formData.cpf} onChange={handleChange} />
+                    <InputMask
+                      mask="999.999.999-99"
+                      maskChar=""
+                      type="text" 
+                      name="cpf" 
+                      placeholder="CPF" 
+                      className="w-full bg-transparent text-white outline-none" 
+                      value={formData.cpf} 
+                      onChange={handleChange} 
+                    />
                   </div>
                   <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
                     <Calendar size={20} className="mr-2 text-yellow-400" />
-                    <input type="date" name="birthDate" className="w-full bg-transparent text-white outline-none" value={formData.birthDate} onChange={handleChange} />
+                    <input 
+                      type="date" 
+                      name="birthDate" 
+                      className="w-full bg-transparent text-white outline-none" 
+                      value={formData.birthDate} 
+                      onChange={handleChange} 
+                    />
                   </div>
                 </>
               )}
@@ -154,36 +239,103 @@ export default function OnboardingPage() {
                 <>
                   <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
                     <User size={20} className="mr-2 text-yellow-400" />
-                    <input type="text" name="name" placeholder="Seu nome" className="w-full bg-transparent text-white outline-none" value={formData.name} onChange={handleChange} />
+                    <input 
+                      type="text" 
+                      name="name" 
+                      placeholder="Seu nome" 
+                      className="w-full bg-transparent text-white outline-none" 
+                      value={formData.name} 
+                      onChange={handleChange} 
+                    />
                   </div>
                   <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
                     <FileText size={20} className="mr-2 text-yellow-400" />
-                    <input type="text" name="cpf" placeholder="CPF" className="w-full bg-transparent text-white outline-none" value={formData.cpf} onChange={handleChange} />
+                    <InputMask
+                      mask="999.999.999-99"
+                      maskChar=""
+                      type="text" 
+                      name="cpf" 
+                      placeholder="CPF" 
+                      className="w-full bg-transparent text-white outline-none" 
+                      value={formData.cpf} 
+                      onChange={handleChange} 
+                    />
                   </div>
                   <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
                     <Mail size={20} className="mr-2 text-yellow-400" />
-                    <input type="email" name="email" placeholder="E-mail" className="w-full bg-transparent text-white outline-none" value={formData.email} onChange={handleChange} />
+                    <input 
+                      type="email" 
+                      name="email" 
+                      placeholder="E-mail" 
+                      className="w-full bg-transparent text-white outline-none" 
+                      value={formData.email} 
+                      onChange={handleChange} 
+                    />
                   </div>
                   <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
                     <Phone size={20} className="mr-2 text-yellow-400" />
-                    <input type="text" name="telefone" placeholder="Telefone" className="w-full bg-transparent text-white outline-none" value={formData.telefone} onChange={handleChange} />
+                    <InputMask
+                      mask="(99) 99999-9999"
+                      maskChar=""
+                      type="text" 
+                      name="telefone" 
+                      placeholder="Telefone" 
+                      className="w-full bg-transparent text-white outline-none" 
+                      value={formData.telefone} 
+                      onChange={handleChange} 
+                    />
                   </div>
                   <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
                     <Calendar size={20} className="mr-2 text-yellow-400" />
-                    <input type="date" name="birthDate" className="w-full bg-transparent text-white outline-none" value={formData.birthDate} onChange={handleChange} />
+                    <input 
+                      type="date" 
+                      name="birthDate" 
+                      className="w-full bg-transparent text-white outline-none" 
+                      value={formData.birthDate} 
+                      onChange={handleChange} 
+                    />
+                  </div>
+                  <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
+                    <User size={20} className="mr-2 text-yellow-400" />
+                    <input 
+                      type="text" 
+                      name="unit" 
+                      placeholder="Código da Unidade" 
+                      className="w-full bg-transparent text-white outline-none" 
+                      value={formData.unit} 
+                      onChange={handleChange} 
+                    />
                   </div>
                   <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
                     <Lock size={20} className="mr-2 text-yellow-400" />
-                    <input type="password" name="password" placeholder="Senha" className="w-full bg-transparent text-white outline-none" value={formData.password} onChange={handleChange} />
+                    <input 
+                      type="password" 
+                      name="password" 
+                      placeholder="Senha" 
+                      className="w-full bg-transparent text-white outline-none" 
+                      value={formData.password} 
+                      onChange={handleChange} 
+                    />
                   </div>
                   <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
                     <Lock size={20} className="mr-2 text-yellow-400" />
-                    <input type="password" name="confirmPassword" placeholder="Confirmar Senha" className="w-full bg-transparent text-white outline-none" value={formData.confirmPassword} onChange={handleChange} />
+                    <input 
+                      type="password" 
+                      name="confirmPassword" 
+                      placeholder="Confirmar Senha" 
+                      className="w-full bg-transparent text-white outline-none" 
+                      value={formData.confirmPassword} 
+                      onChange={handleChange} 
+                    />
                   </div>
                 </>
               )}
             </div>
-            <Button onClick={handleAuth} disabled={isLoading} className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 rounded-lg mt-4">
+            <Button 
+              onClick={handleAuth} 
+              disabled={isLoading} 
+              className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 rounded-lg mt-4"
+            >
               {isLoading ? "Processando..." : (step === "login" ? "Entrar" : "Cadastrar")}
             </Button>
           </>

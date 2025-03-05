@@ -1,8 +1,17 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase"; 
 
+interface DashboardData {
+  referrals: number;
+  rewards: number;
+  users: number;
+  disqualified: number;
+  signedContracts: number;
+  referenceLink: string;
+}
+
 export const useDashboardData = () => {
-  const [data, setData] = useState({
+  const [data, setData] = useState<DashboardData>({
     referrals: 0,
     rewards: 0,
     users: 0,
@@ -25,30 +34,38 @@ export const useDashboardData = () => {
 
         const { data: userData, error: userError } = await supabase
           .from('users')
-          .select('*')  
+          .select('referral_count, referral_code')  
           .eq('id', user.id)
           .single();
 
         if (userError) throw userError;
 
-        const baseUrl = window.location.origin;
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
         const referenceLink = userData?.referral_code 
           ? `${baseUrl}/referral/${userData.referral_code}`
           : "";
 
-        console.log("userData:", userData); 
-        console.log("referral_code:", userData?.referral_code); 
-        console.log("referenceLink:", referenceLink); 
-
-        const [referralsData, rewardsData, usersLogDisqualified, usersLogSigned] = await Promise.all([
-          supabase.from('referrals').select('*', { count: 'exact' }).eq('referrer_id', user.id),
-          supabase.from('rewards').select('*', { count: 'exact' }).eq('user_id', user.id),
-          supabase.from('users_log').select('*', { count: 'exact' }).eq('user_id', user.id).eq('action', 'disqualified'),
-          supabase.from('users_log').select('*', { count: 'exact' }).eq('user_id', user.id).eq('action', 'signed_contract')
+        const [rewardsData, usersLogDisqualified, usersLogSigned] = await Promise.all([
+          supabase
+            .from('rewards')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id),
+          supabase
+            .from('users_log')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .eq('action', 'disqualified'),
+          supabase
+            .from('users_log')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .eq('action', 'signed_contract')
         ]);
 
+        const referralsCount = userData?.referral_count || 0;
+
         setData({
-          referrals: referralsData.count || 0,
+          referrals: referralsCount,
           rewards: rewardsData.count || 0,
           users: 1,
           disqualified: usersLogDisqualified.count || 0,

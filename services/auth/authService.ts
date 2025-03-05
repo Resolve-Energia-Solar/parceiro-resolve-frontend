@@ -4,20 +4,85 @@ import { v4 as uuidv4 } from 'uuid';
 const formatCpf = (cpf: string) => cpf.replace(/\D/g, "");
 const formatBirthDate = (birthDate: string) => new Date(birthDate).toISOString().split("T")[0];
 
-export async function signUpWithCpfAndBirthDate({
+export async function signUpAsPartner({
   name,
   email,
   cpf,
   birthDate,
   telefone,
-  isSuperAdmin = false,
+  unit,
+  isSuperAdmin = false
+}: {
+  name: string;
+  email: string;
+  cpf: string;
+  birthDate: string;
+  unit: string;
+  telefone: string;
+  isSuperAdmin?: boolean;
+}) {
+  return signUp({
+    name,
+    email,
+    cpf,
+    birthDate,
+    telefone,
+    unit,
+    isSuperAdmin,
+    userType: 'Parceiro'
+  });
+}
+
+export async function signUpAsClient({
+  name,
+  email,
+  cpf,
+  birthDate,
+  telefone,
+  unit,
+  isSuperAdmin = false
+}: {
+  name: string;
+  email: string;
+  cpf: string;
+  birthDate: string;
+  unit: string;
+  telefone: string;
+  isSuperAdmin?: boolean;
+}) {
+  return signUp({
+    name,
+    email,
+    cpf,
+    birthDate,
+    telefone,
+    unit,
+    isSuperAdmin,
+    userType: 'Cliente',
+    statusIndication: 'Lead'
+  });
+}
+
+async function signUp({
+  name,
+  email,
+  cpf,
+  birthDate,
+  telefone,
+  unit,
+  isSuperAdmin,
+  userType,
+  statusIndication
 }: {
   name: string;
   email: string;
   cpf: string;
   birthDate: string;
   telefone: string;
-  isSuperAdmin?: boolean;
+  unit: string;
+  isSuperAdmin: boolean;
+  userType: 'Parceiro' | 'Cliente' | 'Admin';
+  statusIndication?: 'Lead' | 'Negociação' | 'Venda';
 }) {
   try {
     const formattedCpf = formatCpf(cpf);
@@ -42,23 +107,44 @@ export async function signUpWithCpfAndBirthDate({
     const sharingCode = uuidv4();
     const referralCode = generateReferralCode();
 
+    const newUser: {
+      id: string;
+      name: string;
+      email: string;
+      cpf: string;
+      birthdate: string;
+      telefone: string;
+      is_super_admin: boolean;
+      sharing_code: string;
+      referral_code: string;
+      referral_count: number;
+      total_referral_earnings: number;
+      user_type: 'Parceiro' | 'Cliente' | 'Admin';
+      unit_id: string;
+      status_indication?: 'Lead' | 'Negociação' | 'Venda';
+    } = {
+      id: authData.user.id,
+      name,
+      email,
+      cpf: formattedCpf,
+      birthdate: formattedBirthDate,
+      telefone,
+      is_super_admin: isSuperAdmin,
+      sharing_code: sharingCode,
+      referral_code: referralCode,
+      referral_count: 0,
+      total_referral_earnings: 0,
+      user_type: userType,
+      unit_id: unit
+    };
+
+    if (statusIndication) {
+      newUser['status_indication'] = statusIndication;
+    }
+
     const { data: userData, error: userError } = await supabase
       .from("users")
-      .insert([
-        {
-          id: authData.user.id,
-          name,
-          email,
-          cpf: formattedCpf,
-          birthdate: formattedBirthDate,
-          telefone,
-          is_super_admin: isSuperAdmin,
-          sharing_code: sharingCode,
-          referral_code: referralCode,
-          referral_count: 0,
-          total_referral_earnings: 0,
-        },
-      ])
+      .insert([newUser])
       .select()
       .single();
 
@@ -123,12 +209,30 @@ export async function signInWithCpfAndBirthDate(cpf: string, birthDate: string) 
 export async function signOut() {
   try {
     const { error } = await supabase.auth.signOut();
+    
+    localStorage.removeItem('sb-access-token');
+    localStorage.removeItem('sb-refresh-token');
+    localStorage.removeItem('user');
+    
+    sessionStorage.removeItem('sb-access-token');
+    sessionStorage.removeItem('sb-refresh-token');
+    sessionStorage.removeItem('user');
+    
+    document.cookie.split(";").forEach((c) => {
+      document.cookie = c
+        .replace(/^ +/, "")
+        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+
     if (error) throw new Error(error.message);
+
     return null;
   } catch (error) {
+    console.error('Erro ao sair:', error);
     throw new Error(`Erro ao sair: ${error}`);
   }
 }
+
 
 export async function getCurrentUser() {
   try {
