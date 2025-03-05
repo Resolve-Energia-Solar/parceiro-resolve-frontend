@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "../../hooks/useUser";
-import { 
-  signUpAsClient, 
+import {  
   signInWithCpfAndBirthDate, 
-  resendConfirmationEmail 
+  resendConfirmationEmail, 
+  signUpAsPartner
 } from "../../services/auth/authService";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -123,14 +123,13 @@ export default function OnboardingPage() {
           }
         }
       } else if (step === "register") {
-        const newUser = await signUpAsClient({
+        const newUser = await signUpAsPartner({
           name: formData.name,
           email: formData.email,
           cpf: formData.cpf,
           birthDate: formData.birthDate,
           telefone: formData.telefone,
           unit: formData.unit,
-          isSuperAdmin: false
         });
         
         if (newUser) {

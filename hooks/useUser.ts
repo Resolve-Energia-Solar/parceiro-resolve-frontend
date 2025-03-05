@@ -13,6 +13,7 @@ export function useUser() {
     const getUser = async () => {
       try {
         setLoading(true);
+        
         const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
 
         if (authError) throw authError;
@@ -27,15 +28,32 @@ export function useUser() {
           if (error) throw error;
 
           setUser(data);
+        } else {
+          setUser(null);
         }
       } catch (error: any) {
         setError(error.message);
+        setUser(null);
       } finally {
         setLoading(false);
       }
     };
 
     getUser();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN') {
+          getUser();
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+        }
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, [setUser]);
 
   return { user, loading, error };

@@ -1,5 +1,4 @@
 import { supabase } from "@/lib/supabase";
-import { v4 as uuidv4 } from 'uuid';
 
 const formatCpf = (cpf: string) => cpf.replace(/\D/g, "");
 const formatBirthDate = (birthDate: string) => new Date(birthDate).toISOString().split("T")[0];
@@ -11,7 +10,6 @@ export async function signUpAsPartner({
   birthDate,
   telefone,
   unit,
-  isSuperAdmin = false
 }: {
   name: string;
   email: string;
@@ -28,7 +26,6 @@ export async function signUpAsPartner({
     birthDate,
     telefone,
     unit,
-    isSuperAdmin,
     userType: 'Parceiro'
   });
 }
@@ -40,7 +37,6 @@ export async function signUpAsClient({
   birthDate,
   telefone,
   unit,
-  isSuperAdmin = false
 }: {
   name: string;
   email: string;
@@ -48,7 +44,6 @@ export async function signUpAsClient({
   birthDate: string;
   unit: string;
   telefone: string;
-  isSuperAdmin?: boolean;
 }) {
   return signUp({
     name,
@@ -57,7 +52,6 @@ export async function signUpAsClient({
     birthDate,
     telefone,
     unit,
-    isSuperAdmin,
     userType: 'Cliente',
     statusIndication: 'Lead'
   });
@@ -70,7 +64,6 @@ async function signUp({
   birthDate,
   telefone,
   unit,
-  isSuperAdmin,
   userType,
   statusIndication
 }: {
@@ -80,7 +73,6 @@ async function signUp({
   birthDate: string;
   telefone: string;
   unit: string;
-  isSuperAdmin: boolean;
   userType: 'Parceiro' | 'Cliente' | 'Admin';
   statusIndication?: 'Lead' | 'Negociação' | 'Venda';
 }) {
@@ -104,7 +96,6 @@ async function signUp({
     if (authError) throw new Error(authError.message);
     if (!authData.user) throw new Error("Erro ao criar usuário na autenticação");
 
-    const sharingCode = uuidv4();
     const referralCode = generateReferralCode();
 
     const newUser: {
@@ -114,8 +105,6 @@ async function signUp({
       cpf: string;
       birthdate: string;
       telefone: string;
-      is_super_admin: boolean;
-      sharing_code: string;
       referral_code: string;
       referral_count: number;
       total_referral_earnings: number;
@@ -129,8 +118,6 @@ async function signUp({
       cpf: formattedCpf,
       birthdate: formattedBirthDate,
       telefone,
-      is_super_admin: isSuperAdmin,
-      sharing_code: sharingCode,
       referral_code: referralCode,
       referral_count: 0,
       total_referral_earnings: 0,
