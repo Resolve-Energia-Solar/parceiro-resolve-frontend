@@ -69,7 +69,7 @@ export default function AdminPage() {
   const [itemsPerPage] = useState(10);
 
   const statusLabels = {
-    'pending': 'Pendente',
+    'pending': 'em análise',
     'approved': 'Aprovado',
     'rejected': 'Rejeitado'
   };
