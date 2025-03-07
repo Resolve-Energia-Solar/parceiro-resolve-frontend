@@ -91,19 +91,19 @@ export default function Dashboard() {
           <StatsCard
             icon={Clock}
             value={data.rewards}
-            label="Em negociação"
+            label="Em análise"
             iconClassName="text-gray-400"
           />
           <StatsCard
             icon={Ban}
             value={data.disqualified}
-            label="Desqualificados"
+            label="Rejeitado"
             iconClassName="text-red-500"
           />
           <StatsCard
             icon={CheckCircle}
             value={data.signedContracts}
-            label="Contratos assinados"
+            label="Aprovados"
             iconClassName="text-green-500"
           />
         </div>
