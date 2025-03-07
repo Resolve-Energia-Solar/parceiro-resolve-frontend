@@ -97,7 +97,7 @@ export default function Dashboard() {
           <StatsCard
             icon={Ban}
             value={data.disqualified}
-            label="Rejeitado"
+            label="Rejeitados"
             iconClassName="text-red-500"
           />
           <StatsCard
