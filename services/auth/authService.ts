@@ -338,6 +338,16 @@ function generateReferralCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
+export async function getUnits() {
+  const { data, error } = await supabase
+    .from('units')
+    .select('id, name');
+  
+  if (error) throw new Error('Erro ao buscar unidades');
+  return data;
+}
+
+
 export async function processReferralReward(referrerId: string) {
   try {
     const { error } = await supabase

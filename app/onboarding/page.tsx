@@ -6,13 +6,14 @@ import { useUser } from "../../hooks/useUser";
 import {  
   signInWithCpfAndBirthDate, 
   resendConfirmationEmail, 
-  signUpAsPartner
+  signUpAsPartner,
+  getUnits
 } from "../../services/auth/authService";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Calendar, FileText, Lock, User, Mail, Phone } from "lucide-react";
+import { Calendar, FileText, User, Mail, Phone, MapPin } from "lucide-react";
 import Image from "next/image";
 import InputMask from 'react-input-mask';
 
@@ -27,16 +28,16 @@ export default function OnboardingPage() {
     birthDate: "",
     email: "",
     telefone: "",
-    password: "",
-    confirmPassword: "",
     unit: "" 
   });
 
+  const [units, setUnits] = useState<{ id: string; name: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
+    fetchUnits();
   }, []);
 
   useEffect(() => {
@@ -45,9 +46,18 @@ export default function OnboardingPage() {
     }
   }, [user, router]);
 
+  const fetchUnits = async () => {
+    try {
+      const unitsData = await getUnits();
+      setUnits(unitsData);
+    } catch (error) {
+      console.error("Erro ao carregar unidades:", error);
+    }
+  };
+
   if (!isClient) return null;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev, 
@@ -58,7 +68,7 @@ export default function OnboardingPage() {
   };
 
   const validateForm = () => {
-    const { name, cpf, birthDate, email, telefone, password, confirmPassword, unit } = formData;
+    const { name, cpf, birthDate, email, telefone, unit } = formData;
     
     if (step === "register") {
       if (!name.trim()) {
@@ -86,13 +96,8 @@ export default function OnboardingPage() {
         return false;
       }
 
-      if (!unit.trim()) {
+      if (!unit) {
         toast.error("Unidade é obrigatória");
-        return false;
-      }
-
-      if (password !== confirmPassword) {
-        toast.error("As senhas não coincidem");
         return false;
       }
     }
@@ -295,37 +300,18 @@ export default function OnboardingPage() {
                     />
                   </div>
                   <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
-                    <User size={20} className="mr-2 text-yellow-400" />
-                    <input 
-                      type="text" 
-                      name="unit" 
-                      placeholder="Código da Unidade" 
-                      className="w-full bg-transparent text-white outline-none" 
-                      value={formData.unit} 
-                      onChange={handleChange} 
-                    />
-                  </div>
-                  <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
-                    <Lock size={20} className="mr-2 text-yellow-400" />
-                    <input 
-                      type="password" 
-                      name="password" 
-                      placeholder="Senha" 
-                      className="w-full bg-transparent text-white outline-none" 
-                      value={formData.password} 
-                      onChange={handleChange} 
-                    />
-                  </div>
-                  <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
-                    <Lock size={20} className="mr-2 text-yellow-400" />
-                    <input 
-                      type="password" 
-                      name="confirmPassword" 
-                      placeholder="Confirmar Senha" 
-                      className="w-full bg-transparent text-white outline-none" 
-                      value={formData.confirmPassword} 
-                      onChange={handleChange} 
-                    />
+                    <MapPin size={20} className="mr-2 text-yellow-400" />
+                    <select
+                      name="unit"
+                      value={formData.unit}
+                      onChange={handleChange}
+                      className="w-full bg-transparent text-white outline-none"
+                    >
+                      <option value="">Selecione uma unidade</option>
+                      {units.map((unit) => (
+                        <option key={unit.id} value={unit.id}>{unit.name}</option>
+                      ))}
+                    </select>
                   </div>
                 </>
               )}
