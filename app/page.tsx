@@ -269,6 +269,7 @@ export default function Home() {
                 </motion.div>
               ))}
             </div>
+            <h1 className="text-center my-10 text-white text-sm font-semi-bold mb-4">Imagem meramente ilustrativa</h1>
           </div>
 
           <motion.div
