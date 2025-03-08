@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Gift, Share2, Smartphone, Trophy, Users, Medal, Plus, Phone, Mail, MapPin, Facebook, Instagram, Linkedin, Clock } from "lucide-react";
+import { ArrowRight, Gift, Share2, Smartphone, Trophy, Users, Medal, Phone, Mail, MapPin, Facebook, Instagram, Linkedin, Clock } from "lucide-react";
 import { Button } from "../components/ui/button";
 import {
   Accordion,
@@ -140,7 +140,7 @@ export default function Home() {
                 variants={fadeInUp}
                 className="text-lg sm:text-xl text-gray-300 mb-8"
               >
-                Cada indicação que se tornar cliente da Resolve conta como um ponto. Quem tiver mais pontos até 30/02/2025 leva um iphone para casa!              </motion.p>
+                Cada indicação que se tornar cliente da Resolve conta como um ponto. Quem tiver mais pontos até 31/03/2025 leva um iphone para casa!              </motion.p>
               <motion.div variants={fadeInUp}>
                 <Link href="/onboarding">
                   <Button size="lg" className="animate-pulse bg-primary text-black hover:bg-primary/90">
@@ -655,7 +655,7 @@ export default function Home() {
               <div className="flex items-center space-x-3 text-gray-400">
                 <MapPin className="w-5 h-5" />
                 <span>Av. Senador Lemos, 3809
-                Esquina com Alferes Costa</span>
+                  Esquina com Alferes Costa</span>
               </div>
             </motion.div>
 
