@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, Clock, Ban, CheckCircle, Copy, Share2, UserPlus, AlertCircle } from "lucide-react";
+import { Users, Clock, Ban, CheckCircle, Copy, Share2, UserPlus } from "lucide-react";
 import { StatsCard } from "../../components/dashboard/StatsCard";
 import { useDashboardData } from "../../hooks/useDashboardData";
 import { Loader2 } from "lucide-react";
