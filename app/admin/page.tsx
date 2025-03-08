@@ -6,12 +6,13 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-toastify";
-import { Loader2, Users, TrendingUp, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, Users, TrendingUp, CheckCircle, XCircle, BarChart2 } from "lucide-react";
 import { useUser } from "@/hooks/useUser";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
 
 interface Referral {
@@ -20,21 +21,21 @@ interface Referral {
   referred_user_id: string;
   status: 'pending' | 'approved' | 'rejected';
   created_at: string;
-  referrer: { 
-    name: string; 
-    email: string; 
-    unit: { 
+  referrer: {
+    name: string;
+    email: string;
+    unit: {
       id: string;
-      name: string; 
-    } 
+      name: string;
+    }
   };
-  referred_user: { 
-    name: string; 
-    email: string; 
-    unit: { 
+  referred_user: {
+    name: string;
+    email: string;
+    unit: {
       id: string;
-      name: string; 
-    } 
+      name: string;
+    }
   };
 }
 
@@ -54,6 +55,7 @@ interface TimeSeriesData {
 }
 
 interface StatusData {
+  color: string | undefined;
   name: string;
   value: number;
 }
@@ -61,7 +63,7 @@ interface StatusData {
 export default function AdminPage() {
   const { user } = useUser();
   const router = useRouter();
-  
+
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -88,6 +90,8 @@ export default function AdminPage() {
     'approved': '#10B981',
     'rejected': '#EF4444'
   };
+
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -122,7 +126,7 @@ export default function AdminPage() {
           const partnerName = referral.referrer.name;
           const date = new Date(referral.created_at);
           const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-          
+
           unitData[unitName] = (unitData[unitName] || 0) + 1;
           partnerData[partnerName] = (partnerData[partnerName] || 0) + 1;
           timeSeries[date.toISOString().split('T')[0]] = (timeSeries[date.toISOString().split('T')[0]] || 0) + 1;
@@ -133,8 +137,12 @@ export default function AdminPage() {
         setUnitChartData(Object.entries(unitData).map(([name, value]) => ({ name, value })));
         setPartnerChartData(Object.entries(partnerData).map(([name, value]) => ({ name, value })));
         setTimeSeriesData(Object.entries(timeSeries).map(([date, count]) => ({ date, count })));
-        setStatusData(Object.entries(statusCount).map(([name, value]) => ({ name: statusLabels[name as keyof typeof statusLabels], value })));
-        
+        setStatusData(Object.entries(statusCount).map(([name, value]) => ({
+          name: statusLabels[name as keyof typeof statusLabels],
+          value,
+          color: statusColors[name as keyof typeof statusColors]
+        })));
+
         setMonthlyData(Object.entries(monthlyCount)
           .sort(([a], [b]) => a.localeCompare(b))
           .map(([month, count]) => ({ month, count }))
@@ -142,7 +150,7 @@ export default function AdminPage() {
 
         setTopPartners(
           Object.entries(partnerData)
-            .sort(([,a], [,b]) => b - a)
+            .sort(([, a], [, b]) => b - a)
             .slice(0, 5)
             .map(([name, count]) => ({ name, count }))
         );
@@ -177,9 +185,9 @@ export default function AdminPage() {
 
   const filteredReferrals = referrals.filter(referral => {
     return (selectedUnit === 'all' || referral.referrer.unit.id === selectedUnit) &&
-           (selectedStatus === 'all' || referral.status === selectedStatus) &&
-           (!searchTerm || referral.referrer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            referral.referred_user.name.toLowerCase().includes(searchTerm.toLowerCase()));
+      (selectedStatus === 'all' || referral.status === selectedStatus) &&
+      (!searchTerm || referral.referrer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        referral.referred_user.name.toLowerCase().includes(searchTerm.toLowerCase()));
   });
 
   const currentReferrals = filteredReferrals.slice(
@@ -195,12 +203,14 @@ export default function AdminPage() {
     );
   }
 
+  
+
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100">
       <Header />
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Dashboard de Indicações</h1>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-indigo-600 rounded-lg shadow-lg p-6">
             <div className="flex items-center justify-between">
@@ -271,6 +281,54 @@ export default function AdminPage() {
               </ResponsiveContainer>
             </div>
           </div>
+          <div className="bg-gray-800 rounded-lg shadow-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">Top 5 Parceiros</h2>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={topPartners} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis type="number" stroke="#9CA3AF" />
+                  <YAxis dataKey="name" type="category" stroke="#9CA3AF" />
+                  <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: 'none' }} />
+                  <Legend />
+                  <Bar dataKey="count" fill="#82ca9d" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          <div className="bg-gray-800 rounded-lg shadow-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">Distribuição de Status</h2>
+            <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={statusData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {statusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#374151', border: 'none', borderRadius: '8px' }}
+                    itemStyle={{ color: '#fff' }}
+                    labelStyle={{ color: '#fff' }}
+                  />
+                  <Legend
+                    layout="vertical"
+                    verticalAlign="middle"
+                    align="right"
+                    wrapperStyle={{ paddingLeft: '20px' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         </div>
 
         <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden mb-8">
@@ -331,7 +389,7 @@ export default function AdminPage() {
                         <div className="text-sm text-gray-400">{referral.referred_user.email}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${statusColors[referral.status]}`}>
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full text-white`} style={{ backgroundColor: statusColors[referral.status] }}>
                           {statusLabels[referral.status]}
                         </span>
                       </td>
@@ -370,7 +428,7 @@ export default function AdminPage() {
             </p>
           </div>
           <div>
-            <nav className="relative z-0 inline-flex rounded-md gap-5 shadow-sm -space-x-px" aria-label="Pagination">
+            <nav className="relative z-0 inline-flex rounded-md gap-3 shadow-sm -space-x-px" aria-label="Pagination">
               <Button
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
@@ -379,7 +437,7 @@ export default function AdminPage() {
                 Anterior
               </Button>
               <Button
-                onClick={() => setCurrentPage(prev => 
+                onClick={() => setCurrentPage(prev =>
                   prev < Math.ceil(filteredReferrals.length / itemsPerPage) ? prev + 1 : prev
                 )}
                 disabled={currentPage >= Math.ceil(filteredReferrals.length / itemsPerPage)}
@@ -391,7 +449,7 @@ export default function AdminPage() {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
-          
+
