@@ -1,7 +1,50 @@
 import { supabase } from "@/lib/supabase";
 
 const formatCpf = (cpf: string) => cpf.replace(/\D/g, "");
-const formatBirthDate = (birthDate: string) => new Date(birthDate).toISOString().split("T")[0];
+
+const formatBirthDate = (birthDate: string) => {
+  try {
+    if (birthDate.includes('/')) {
+      const [day, month, year] = birthDate.split('/');
+      if (!day || !month || !year || isNaN(Number(day)) || isNaN(Number(month)) || isNaN(Number(year))) {
+        throw new Error("Data inválida");
+      }
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    } 
+    else {
+      const date = new Date(birthDate);
+      if (isNaN(date.getTime())) {
+        throw new Error("Data inválida");
+      }
+      return date.toISOString().split('T')[0];
+    }
+  } catch (error) {
+    console.error("Erro ao formatar data:", error);
+    throw new Error("Formato de data inválido");
+  }
+};
+
+const formatBirthDateForDB = (birthDate: string): string => {
+  if (birthDate.includes('/')) {
+    const [day, month, year] = birthDate.split('/');
+    return `${year}-${month}-${day}`;
+  }
+  try {
+    const date = new Date(birthDate);
+    if (!isNaN(date.getTime())) {
+      return date.toISOString().split('T')[0];
+    }
+  } catch (error) {
+    console.error('Erro ao formatar data:', error);
+  }
+  
+  return birthDate;
+};
+
+
+
+
+
 
 export async function signUpAsPartner({
   name,
@@ -150,13 +193,14 @@ async function signUp({
 export async function signInWithCpfAndBirthDate(cpf: string, birthDate: string) {
   try {
     const formattedCpf = formatCpf(cpf);
-    const formattedBirthDate = formatBirthDate(birthDate);
+    const formattedBirthDate = formatBirthDateForDB(birthDate);
 
     console.log('Tentando login com:', { cpf: formattedCpf, birthDate: formattedBirthDate });
 
+    // Busca usuário no banco de dados pelo CPF e data de nascimento
     const { data: user, error } = await supabase
       .from("users")
-      .select("email, id")
+      .select("email, id, birthdate")
       .eq("cpf", formattedCpf)
       .eq("birthdate", formattedBirthDate)
       .single();
@@ -168,9 +212,15 @@ export async function signInWithCpfAndBirthDate(cpf: string, birthDate: string) 
 
     console.log('Usuário encontrado:', user);
 
+    // Usa a data exata do banco de dados como senha
+    const password = user.birthdate;
+
+    console.log('Tentando autenticar com email:', user.email);
+
+    // Autentica com o email do usuário e a data de nascimento como senha
     const { data, error: signInError } = await supabase.auth.signInWithPassword({
       email: user.email,
-      password: birthDate,
+      password: password,
     });
 
     if (signInError) {
@@ -184,14 +234,18 @@ export async function signInWithCpfAndBirthDate(cpf: string, birthDate: string) 
 
     console.log('Login bem-sucedido:', data.user);
 
+    // Registra a atividade de login do usuário
     await logUserActivity(user.id, 'login', 'User logged in');
 
+    // Retorna dados combinados do usuário
     return { ...data.user, ...user };
   } catch (error) {
     console.error('Erro no login:', error);
     throw error;
   }
 }
+
+
 
 export async function signOut() {
   try {
