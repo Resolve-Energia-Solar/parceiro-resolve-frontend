@@ -236,7 +236,7 @@ export default function OnboardingPage() {
                       type="text"
                       name="birthDate"
                       id="birthDate"
-                      placeholder="DD/MM/AAAA"
+                      placeholder="dd/mm/aaaa"
                       className="w-full h-10 bg-transparent text-white outline-none"
                       value={formData.birthDate}
                       onChange={handleChange}
@@ -307,7 +307,7 @@ export default function OnboardingPage() {
                       maskChar=""
                       type="text"
                       name="birthDate"
-                      placeholder="DD/MM/AAAA"
+                      placeholder="dd/mm/aaaa"
                       className="w-full bg-transparent text-white outline-none text-lg py-2 px-1 touch-manipulation"
                       value={formData.birthDate}
                       onChange={handleChange}
