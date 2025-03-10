@@ -534,7 +534,7 @@ export default function Home() {
                   Até quando posso participar?
                 </AccordionTrigger>
                 <AccordionContent className="text-gray-600">
-                  A promoção está válida até 31/12/2025 ou enquanto durarem os estoques. Os vencedores serão anunciados em janeiro de 2026.
+                  A promoção está válida até 31/03/2025 ou enquanto durarem os estoques. Os vencedores serão anunciados em janeiro de 2026.
                 </AccordionContent>
               </AccordionItem>
 
