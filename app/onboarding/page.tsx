@@ -227,19 +227,19 @@ export default function OnboardingPage() {
                       onChange={handleChange}
                     />
                   </div>
-                  <div className="relative flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
-                    <label htmlFor="birthDate" className="sr-only">Data de nascimento</label>
-                    <Calendar size={20} className="absolute left-3 text-yellow-400 pointer-events-none" />
-                    <input
-                      type="date"
-                      id="birthDate"
+
+                  <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
+                    <Calendar size={20} className="mr-2 text-yellow-400" />
+                    <InputMask
+                      mask="99/99/9999"
+                      maskChar=""
+                      type="text"
                       name="birthDate"
-                      className="w-full h-10 bg-transparent text-white outline-none pl-8 pr-2 touch-manipulation appearance-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50"
+                      id="birthDate"
+                      placeholder="DD/MM/AAAA"
+                      className="w-full h-10 bg-transparent text-white outline-none"
                       value={formData.birthDate}
                       onChange={handleChange}
-                      placeholder="DD/MM/AAAA"
-                      pattern="\d{2}/\d{2}/\d{4}"
-                      inputMode="numeric"
                       style={{
                         fontSize: '16px',
                         caretColor: 'white',
@@ -247,19 +247,7 @@ export default function OnboardingPage() {
                         WebkitTapHighlightColor: 'rgba(255, 255, 255, 0.2)',
                       }}
                     />
-                    <style jsx>{`
-    /* Estilizando o calendário nativo em navegadores */
-    input[type="date"]::-webkit-calendar-picker-indicator {
-      background-color: rgba(255, 255, 255, 0.2);
-      padding: 5px;
-      border-radius: 3px;
-      filter: invert(1);
-      cursor: pointer;
-    }
-  `}</style>
                   </div>
-
-
                 </>
               )}
               {step === "register" && (
@@ -314,9 +302,12 @@ export default function OnboardingPage() {
                   </div>
                   <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
                     <Calendar size={24} className="mr-3 text-yellow-400 flex-shrink-0" />
-                    <input
-                      type="date"
+                    <InputMask
+                      mask="99/99/9999"
+                      maskChar=""
+                      type="text"
                       name="birthDate"
+                      placeholder="DD/MM/AAAA"
                       className="w-full bg-transparent text-white outline-none text-lg py-2 px-1 touch-manipulation"
                       value={formData.birthDate}
                       onChange={handleChange}
@@ -328,6 +319,7 @@ export default function OnboardingPage() {
                       }}
                     />
                   </div>
+
 
                   <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
                     <MapPin size={20} className="mr-2 text-yellow-400" />
