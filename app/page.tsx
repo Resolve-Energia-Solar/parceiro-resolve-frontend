@@ -203,7 +203,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl font-bold mb-4 text-white">Top 5 Ganhadores</h2>
+            <h2 className="text-4xl font-bold mb-4 text-white">Top 4 Ganhadores</h2>
             <p className="text-xl text-gray-400">
               Os participantes mais próximos de ganhar um iPhone 15
             </p>
@@ -256,7 +256,7 @@ export default function Home() {
                         <p className={`${index === 0 ? "text-yellow-400 font-semibold" :
                           index === 1 ? "text-gray-400" :
                             "text-amber-400"
-                          }`}>{participant.referrals} indicações</p>
+                          }`}>{participant.referrals} vendas convertidas</p>
                       </div>
                     </motion.div>
                   </div>
@@ -282,7 +282,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="grid gap-4"
           >
-            {topParticipants.slice(3).map((participant, index) => (
+            {topParticipants.slice(3, 4).map((participant, index) => (
               <motion.div
                 key={participant.position}
                 variants={{
@@ -394,7 +394,7 @@ export default function Home() {
               </div>
               <h3 className="text-2xl font-semibold mb-2">Ganhe um iPhone 15</h3>
               <p className="text-gray-300 text-lg">
-                O participante com mais indicações válidas até o prazo ganha um iPhone 15.
+                O participante com mais indicações convertidas em vendas até 31/03/2025 ganha um iphone 15
               </p>
             </motion.div>
           </motion.div>
@@ -420,7 +420,7 @@ export default function Home() {
               <motion.h2 variants={fadeInUp} className="text-4xl font-bold mb-6 text-black">O Prêmio</motion.h2>
               <motion.div variants={fadeInUp} className="space-y-4 text-lg text-black mb-8">
                 <p>
-                  Os 5 participantes que mais indicarem amigos ganharão um iPhone 15 128GB.
+                  Os 4 participantes que mais indicarem amigos ganharão um iPhone 15 128GB.
                 </p>
                 <ul className="space-y-2">
                   <motion.li variants={fadeInUp} className="flex items-center">
@@ -483,7 +483,7 @@ export default function Home() {
                 transition={{ delay: 0.3 }}
                 className="absolute -bottom-6 -right-6 bg-black text-white p-4 rounded-lg shadow-lg"
               >
-                <p className="text-lg font-bold">Top 5 Ganham!</p>
+                <p className="text-lg font-bold">Top 4 Ganham!</p>
               </motion.div>
             </motion.div>
           </motion.div>
@@ -516,8 +516,9 @@ export default function Home() {
                   Como funciona o sistema de indicações?
                 </AccordionTrigger>
                 <AccordionContent className="text-gray-600">
-                  Após se cadastrar, você receberá um código único. Compartilhe este código com amigos e familiares. Cada pessoa que se cadastrar usando seu código será contabilizada como uma indicação sua.
-                </AccordionContent>
+                  Após se cadastrar, você receberá um link único.
+                  Compartilhe este link com amigos e familiares. Cada pessoa que se cadastrar usando seu link
+                  será contabilizada como uma indicação sua.                </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-2" className="border rounded-lg px-6">
@@ -534,8 +535,7 @@ export default function Home() {
                   Até quando posso participar?
                 </AccordionTrigger>
                 <AccordionContent className="text-gray-600">
-                  A promoção está válida até 31/03/2025 ou enquanto durarem os estoques. Os vencedores serão anunciados em janeiro de 2026.
-                </AccordionContent>
+                  A promoção está válida até 31/03/2025.                </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-4" className="border rounded-lg px-6">
@@ -543,8 +543,8 @@ export default function Home() {
                   Como sei se estou ganhando?
                 </AccordionTrigger>
                 <AccordionContent className="text-gray-600">
-                  Você pode acompanhar sua posição no ranking em tempo real através do painel de indicações. Os 5 primeiros colocados ganharão um iPhone 15.
-                </AccordionContent>
+                  Você pode acompanhar sua posição no ranking em tempo real
+                  através do painel de indicações. Os 2 primeiros colocados ganharão um iPhone 15.                </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-5" className="border rounded-lg px-6">
