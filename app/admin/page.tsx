@@ -206,7 +206,7 @@ export default function AdminPage() {
         return;
       }
 
-      if (user.user_type !== 'Admin' && user.user_type !== 'SDR') {
+      if (user.user_type !== 'Admin' && user.user_type !== 'SDR' && user.user_type !== 'Super admin') {
         router.push('/dashboard');
         return;
       }
