@@ -48,7 +48,7 @@ export function Header({ className }: HeaderProps) {
     router.push('/onboarding');
   };
 
-  const isAdminOrSDR = user && (user.user_type === 'Admin' || user.user_type === 'SDR');
+  const isAdminOrSDR = user && (user.user_type === 'Admin' || user.user_type === 'Super admin');
 
   return (
     <motion.header
