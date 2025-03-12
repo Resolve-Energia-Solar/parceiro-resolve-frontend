@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { DivideIcon as LucideIcon } from "lucide-react";
 import { Card } from "../../components/ui/card";
 import { motion } from "framer-motion";
+import { Tooltip } from "../../components/ui/Tooltip";
 
 interface StatsCardProps {
   icon: typeof LucideIcon;
@@ -21,12 +22,12 @@ export function StatsCard({ icon: Icon, value, label, iconClassName }: StatsCard
 
   if (!mounted) {
     return (
-      <Card className="p-6 bg-white shadow-none animate-pulse">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-gray-100 rounded-lg" />
-          <div>
-            <div className="h-7 w-16 bg-gray-100 rounded mb-2" />
-            <div className="h-4 w-24 bg-gray-100 rounded" />
+      <Card className="p-3 bg-white shadow-none animate-pulse">
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 bg-gray-100 rounded-lg" />
+          <div className="flex-1">
+            <div className="h-5 w-12 bg-gray-100 rounded mb-1" />
+            <div className="h-3 w-20 bg-gray-100 rounded" />
           </div>
         </div>
       </Card>
@@ -39,17 +40,19 @@ export function StatsCard({ icon: Icon, value, label, iconClassName }: StatsCard
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <Card className="p-6 bg-white shadow-none hover:bg-gray-50 transition-colors">
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-lg bg-gray-50">
-            <Icon className={`w-6 h-6 ${iconClassName}`} />
+      <Tooltip content={label}>
+        <Card className="p-3 bg-white shadow-none hover:bg-gray-50 transition-colors cursor-help">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 rounded-lg bg-gray-50">
+              <Icon className={`w-5 h-5 ${iconClassName}`} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-bold text-gray-900 truncate">{value}</h3>
+              <p className="text-xs text-gray-500 truncate">{label}</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-3xl font-bold text-gray-900">{value}</h3>
-            <p className="text-sm text-gray-500">{label}</p>
-          </div>
-        </div>
-      </Card>
+        </Card>
+      </Tooltip>
     </motion.div>
   );
 }

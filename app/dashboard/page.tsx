@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, Clock, Ban, CheckCircle, Copy, Share2, UserPlus } from "lucide-react";
+import { Users, Clock, Ban, CheckCircle, Copy, Share2, UserPlus, PhoneCall } from "lucide-react";
 import { StatsCard } from "../../components/dashboard/StatsCard";
-import { useDashboardData } from "../../hooks/useDashboardData";
+import { useDashboardData, formatStatus } from "../../hooks/useDashboardData";
 import { Loader2 } from "lucide-react";
 import { Header } from "../../components/layout/Header";
 import { RankingList } from "@/components/dashboard/RankingList";
@@ -84,32 +84,39 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8 mb-6 md:mb-8">
           <div className="lg:col-span-2 space-y-4 md:space-y-6">
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
               <StatsCard
                 icon={Users}
-                value={data.referrals}
+                value={data.indicacao}
                 label="Indicações"
+                iconClassName="text-blue-500"
+              />
+              <StatsCard
+                icon={PhoneCall}
+                value={data.contatoComercial}
+                label="Contato Comercial"
                 iconClassName="text-yellow-500"
               />
               <StatsCard
                 icon={Clock}
-                value={data.pending}
-                label="Em análise"
-                iconClassName="text-blue-500"
+                value={data.emNegociacao}
+                label="Em Negociação"
+                iconClassName="text-purple-500"
               />
               <StatsCard
                 icon={Ban}
-                value={data.rejected}
-                label="Rejeitados"
+                value={data.semInteresse}
+                label="Sem Interesse"
                 iconClassName="text-red-500"
               />
               <StatsCard
                 icon={CheckCircle}
-                value={data.approved}
+                value={data.aprovados}
                 label="Aprovados"
                 iconClassName="text-green-500"
               />
             </div>
+
             <div className="bg-[#121212] rounded-lg p-3 sm:p-4 md:p-6">
               <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">Status das Indicações</h3>
               <div className="overflow-x-auto -mx-3 sm:mx-0">
@@ -127,15 +134,19 @@ export default function Dashboard() {
                         <TableCell className="whitespace-nowrap">{referral.name}</TableCell>
                         <TableCell className="whitespace-nowrap">{new Date(referral.date).toLocaleDateString()}</TableCell>
                         <TableCell>
-                          <span className={`px-2 py-1 inline-block text-center rounded-full text-xs ${
-                            referral.status === 'approved' ? 'bg-green-500' :
-                            referral.status === 'rejected' ? 'bg-red-500' :
-                            'bg-blue-500'
-                          }`}>
-                            {referral.status === 'pending' ? 'Em análise' :
-                            referral.status === 'approved' ? 'Aprovado' : 'Rejeitado'}
+                          <span
+                            className={`px-2 py-1 inline-block text-center rounded-full text-xs ${referral.status === 'Indicação' ? 'bg-blue-500 text-white' :
+                              referral.status === 'Contato comercial' ? 'bg-yellow-500 text-black' :
+                                referral.status === 'Em negociacao' ? 'bg-purple-500 text-white' :
+                                  referral.status === 'Sem interesse' ? 'bg-red-500 text-white' :
+                                    referral.status === 'Aprovado' ? 'bg-green-500 text-white' :
+                                      'bg-gray-500 text-white'
+                              }`}
+                          >
+                            {formatStatus(referral.status)}
                           </span>
                         </TableCell>
+
                       </TableRow>
                     ))}
                   </TableBody>
@@ -152,15 +163,15 @@ export default function Dashboard() {
                   value={referralLink}
                   readOnly
                 />
-                <div className="flex gap-2">
+                <div className="flex gap-2 mt-2 sm:mt-0">
                   <Button
-                    className="flex-1 sm:flex-auto bg-yellow-500 p-2 rounded-lg hover:bg-yellow-600 transition-colors"
+                    className="flex-1 sm:flex-none bg-yellow-500 p-2 rounded-lg hover:bg-yellow-600 transition-colors"
                     onClick={copyToClipboard}
                   >
                     <Copy className="w-4 h-4 sm:w-5 sm:h-5" />
                   </Button>
                   <Button
-                    className="flex-1 sm:flex-auto bg-gray-700 p-2 rounded-lg hover:bg-gray-600 transition-colors"
+                    className="flex-1 sm:flex-none bg-gray-700 p-2 rounded-lg hover:bg-gray-600 transition-colors"
                     onClick={shareLink}
                   >
                     <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -176,19 +187,19 @@ export default function Dashboard() {
 
         <div className="bg-[#121212] rounded-lg p-3 sm:p-4 md:p-6">
           <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">Informações sobre Status</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
-            <div className="flex items-center space-x-2">
-              <Clock className="text-blue-500 w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-              <span className="text-sm md:text-base">Em análise: Indicação está sendo avaliada</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="text-green-500 w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-              <span className="text-sm md:text-base">Aprovado: Indicação aceita e recompensa garantida</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Ban className="text-red-500 w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-              <span className="text-sm md:text-base">Rejeitado: Indicação não atendeu aos critérios</span>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
+            {[
+              { icon: Users, color: "text-blue-500", label: "Indicação: Cliente indicado" },
+              { icon: PhoneCall, color: "text-yellow-500", label: "Contato Comercial: Em contato" },
+              { icon: Clock, color: "text-purple-500", label: "Em Negociação: Proposta em análise" },
+              { icon: Ban, color: "text-red-500", label: "Sem Interesse: Cliente recusou" },
+              { icon: CheckCircle, color: "text-green-500", label: "Aprovado: Negócio fechado" },
+            ].map((item, index) => (
+              <div key={index} className="flex items-center space-x-2">
+                <item.icon className={`${item.color} w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0`} />
+                <span className="text-sm md:text-base">{item.label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>

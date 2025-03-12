@@ -5,22 +5,24 @@ interface Referral {
   id: string;
   name: string;
   date: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'Indicação' | 'Contato comercial' | 'Em negociacao' | 'Sem interesse' | 'Aprovado';
 }
 
 interface DashboardData {
   recentReferrals: Referral[];
   referralCode: string;
   referrals: number;
-  pending: number;
-  approved: number;
-  rejected: number;
+  indicacao: number;
+  contatoComercial: number;
+  emNegociacao: number;
+  semInteresse: number;
+  aprovados: number;
   referenceLink: string;
 }
 
 interface ReferralData {
   id: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'Indicação' | 'Contato comercial' | 'Em negociacao' | 'Sem interesse' | 'Aprovado';
   created_at: string;
   referred_user: {
     name: string;
@@ -32,9 +34,11 @@ export const useDashboardData = () => {
     recentReferrals: [],
     referralCode: "",
     referrals: 0,
-    pending: 0,
-    approved: 0,
-    rejected: 0,
+    indicacao: 0,
+    contatoComercial: 0,
+    emNegociacao: 0,
+    semInteresse: 0,
+    aprovados: 0,
     referenceLink: "",
   });
   const [loading, setLoading] = useState(true);
@@ -75,9 +79,11 @@ export const useDashboardData = () => {
 
         const typedReferralsData = referralsData as unknown as ReferralData[];
 
-        const pendingCount = typedReferralsData.filter(referral => referral.status === 'pending').length;
-        const approvedCount = typedReferralsData.filter(referral => referral.status === 'approved').length;
-        const rejectedCount = typedReferralsData.filter(referral => referral.status === 'rejected').length;
+        const indicacaoCount = typedReferralsData.filter(referral => referral.status === 'Indicação').length;
+        const contatoComercialCount = typedReferralsData.filter(referral => referral.status === 'Contato comercial').length;
+        const emNegociacaoCount = typedReferralsData.filter(referral => referral.status === 'Em negociacao').length;
+        const semInteresseCount = typedReferralsData.filter(referral => referral.status === 'Sem interesse').length;
+        const aprovadosCount = typedReferralsData.filter(referral => referral.status === 'Aprovado').length;
 
         setData({
           recentReferrals: typedReferralsData.map(referral => ({
@@ -88,9 +94,11 @@ export const useDashboardData = () => {
           })),
           referralCode: userData.referral_code,
           referrals: userData.referral_count,
-          pending: pendingCount,
-          approved: approvedCount,
-          rejected: rejectedCount,
+          indicacao: indicacaoCount,
+          contatoComercial: contatoComercialCount,
+          emNegociacao: emNegociacaoCount,
+          semInteresse: semInteresseCount,
+          aprovados: aprovadosCount,
           referenceLink,
         });
       } catch (error) {
@@ -104,4 +112,28 @@ export const useDashboardData = () => {
   }, []);
 
   return { data, loading };
+};
+
+export const formatStatus = (status: string) => {
+  const statusMap = {
+    indicacao: 'Indicação',
+    contato_comercial: 'Contato Comercial',
+    em_negociacao: 'Em Negociação',
+    sem_interesse: 'Sem Interesse',
+    aprovados: 'Aprovado'
+  };
+
+  return statusMap[status as keyof typeof statusMap] || status;
+};
+
+export const getStatusColor = (status: string) => {
+  const colorMap = {
+    indicacao: 'bg-blue-500',
+    contato_comercial: 'bg-yellow-500',
+    em_negociacao: 'bg-purple-500',
+    sem_interesse: 'bg-red-500',
+    aprovados: 'bg-green-500'
+  };
+
+  return colorMap[status as keyof typeof colorMap] || 'bg-gray-500';
 };
