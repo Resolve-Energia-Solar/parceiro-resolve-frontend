@@ -380,7 +380,7 @@ export default function Home() {
               </div>
               <h3 className="text-2xl font-semibold mb-2">Seus amigos contratam</h3>
               <p className="text-gray-300 text-lg">
-                Cada amigo que fechar com a Resolve vira um ponto. Quanto mais amigos, mais chances!
+                Indique seus amigos e aumente suas chances de ganhar um iPhone 15 a cada venda convertida!
               </p>
             </motion.div>
 
