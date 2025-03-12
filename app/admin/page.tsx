@@ -222,7 +222,7 @@ export default function AdminPage() {
         if (unitsError) throw unitsError;
         setUnits(unitsData || []);
 
-        let userUnitIdValue = null;
+        let userUnitIdValue: any = null;
 
         if (user.user_type === 'SDR') {
           const { data: userData, error: userError } = await supabase
