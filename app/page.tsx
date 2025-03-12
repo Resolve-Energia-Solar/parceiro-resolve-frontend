@@ -420,8 +420,8 @@ export default function Home() {
               <motion.h2 variants={fadeInUp} className="text-4xl font-bold mb-6 text-black">O Prêmio</motion.h2>
               <motion.div variants={fadeInUp} className="space-y-4 text-lg text-black mb-8">
                 <p>
-                Consulte o Regulamento para obter informações detalhadas
-                sobre a premiação
+                  Consulte o Regulamento para obter informações detalhadas
+                  sobre a premiação
                 </p>
                 <ul className="space-y-2">
                   <motion.li variants={fadeInUp} className="flex items-center">
@@ -517,9 +517,10 @@ export default function Home() {
                   Como funciona o sistema de indicações?
                 </AccordionTrigger>
                 <AccordionContent className="text-gray-600">
-                  Após se cadastrar, você receberá um link único.
-                  Compartilhe este link com amigos e familiares. Cada pessoa que se cadastrar usando seu link
-                  será contabilizada como uma indicação sua.                </AccordionContent>
+                  Após o cadastro, você receberá um link
+                  exclusivo. Compartilhe-o com amigos e familiares. Cada preenchimento realizado através do
+                  seu link será registrado como uma indicação. No entanto, os pontos do ranking para concorrer
+                  ao iPhone 15 serão contabilizados apenas para indicações convertidas em venda.               </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-2" className="border rounded-lg px-6">
