@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { Users, Clock, Ban, CheckCircle, Copy, Share2, UserPlus, PhoneCall } from "lucide-react";
 import { StatsCard } from "../../components/dashboard/StatsCard";
 import { useDashboardData, formatStatus } from "../../hooks/useDashboardData";
@@ -27,7 +27,7 @@ export default function Dashboard() {
   useEffect(() => {
     const checkAuth = async () => {
       setMounted(true);
-      
+
       try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
@@ -73,12 +73,17 @@ export default function Dashboard() {
 
         if (userData.user_type === 'Admin' || userData.user_type === 'Parceiro') {
           setIsAuthorized(true);
+        } else if (userData.user_type === 'SDR') {
+          console.log("Redirecionando SDR para /admin");
+          router.push("/admin");
+          return;
         } else {
           console.log("Usuário não autorizado:", userData.user_type);
           toast.error("Acesso não autorizado. Esta página é restrita para Administradores e Parceiros.");
-          window.location.href = "/";
+          router.push("/");
           return;
         }
+        
       } catch (error) {
         console.error("Erro ao verificar autenticação:", error);
         toast.error("Ocorreu um erro ao verificar suas permissões");
@@ -89,7 +94,7 @@ export default function Dashboard() {
     };
 
     checkAuth();
-  }, []); 
+  }, []);
 
   useEffect(() => {
     if (data?.referenceLink) {
@@ -148,7 +153,7 @@ export default function Dashboard() {
           </Button>
         </div>
 
-        
+
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogContent className="bg-[#121212] text-white max-w-[95vw] sm:max-w-[500px] p-4 sm:p-6">
             <DialogHeader>
@@ -214,11 +219,11 @@ export default function Dashboard() {
                         <TableCell>
                           <span
                             className={`px-2 py-1 inline-block text-center rounded-full text-xs ${referral.status === 'Indicação' ? 'bg-blue-500 text-white' :
-                                referral.status === 'Contato comercial' ? 'bg-yellow-500 text-black' :
-                                  referral.status === 'Em negociacao' ? 'bg-purple-500 text-white' :
-                                    referral.status === 'Sem Interesse ou Reprovado' ? 'bg-red-500 text-white' :
-                                      referral.status === 'Aprovado' ? 'bg-green-500 text-white' :
-                                        'bg-gray-500 text-white'
+                              referral.status === 'Contato comercial' ? 'bg-yellow-500 text-black' :
+                                referral.status === 'Em negociacao' ? 'bg-purple-500 text-white' :
+                                  referral.status === 'Sem Interesse ou Reprovado' ? 'bg-red-500 text-white' :
+                                    referral.status === 'Aprovado' ? 'bg-green-500 text-white' :
+                                      'bg-gray-500 text-white'
                               }`}
                           >
                             {formatStatus(referral.status)}

@@ -16,6 +16,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { Calendar, FileText, User, Mail, Phone, MapPin } from "lucide-react";
 import Image from "next/image";
 import InputMask from 'react-input-mask';
+import { supabase } from "@/lib/supabase";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -118,10 +119,29 @@ export default function OnboardingPage() {
       if (!validateForm()) return;
 
       if (step === "login") {
-        const user = await signInWithCpfAndBirthDate(formData.cpf, formData.birthDate);
-        if (user) {
+        const authUser = await signInWithCpfAndBirthDate(formData.cpf, formData.birthDate);
+
+        if (authUser) {
+          const userId = authUser.id;
+
+          const { data: userData, error } = await supabase
+            .from('users')
+            .select('user_type')
+            .eq('id', userId)
+            .single();
+
+          if (error) {
+            throw new Error('Erro ao obter informações do usuário');
+          }
+
+          if (userData && userData.user_type === "Cliente") {
+            await supabase.auth.signOut();
+            throw new Error('Acesso não autorizado. Clientes não podem acessar o sistema administrativo.');
+          }
+
           toast.success("Login realizado com sucesso!");
-          if (user.app_metadata.user_type === "Admin") {
+
+          if (userData && userData.user_type === "SDR") {
             router.replace("/admin");
           } else {
             router.replace("/dashboard");
@@ -142,11 +162,14 @@ export default function OnboardingPage() {
         }
       }
     } catch (error: any) {
-      toast.error("Erro: " + error.message);
+      console.error("Erro na autenticação:", error);
+      toast.error("Erro: " + (error.message || "Ocorreu um problema durante a autenticação"));
     } finally {
       setIsLoading(false);
     }
   };
+
+
 
   const handleResendConfirmation = async () => {
     setIsLoading(true);

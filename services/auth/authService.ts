@@ -41,11 +41,6 @@ const formatBirthDateForDB = (birthDate: string): string => {
   return birthDate;
 };
 
-
-
-
-
-
 export async function signUpAsPartner({
   name,
   email,
@@ -373,8 +368,18 @@ async function updateReferralCount(userId: string) {
 
 async function logUserActivity(userId: string, action: string, details: string) {
   try {
+    const { error: checkError } = await supabase
+      .from('users_log')
+      .select('id')
+      .limit(1);
+    
+    if (checkError && checkError.code === '42P01') {
+      console.warn('Tabela users_log não existe. Ignorando o registro de atividade.');
+      return;
+    }
+    
     const { error } = await supabase
-      .from('user_activity_logs')
+      .from('users_log')
       .insert({
         user_id: userId,
         action,
@@ -382,11 +387,14 @@ async function logUserActivity(userId: string, action: string, details: string) 
         timestamp: new Date().toISOString()
       });
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.warn(`Aviso: Não foi possível registrar atividade do usuário: ${error.message}`);
+    }
   } catch (error) {
-    console.error(`Erro ao registrar atividade do usuário: ${error}`);
+    console.warn(`Aviso: Erro ao registrar atividade do usuário: ${error}`);
   }
 }
+
 
 function generateReferralCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
