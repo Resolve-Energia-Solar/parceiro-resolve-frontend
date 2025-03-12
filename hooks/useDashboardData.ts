@@ -5,7 +5,7 @@ interface Referral {
   id: string;
   name: string;
   date: string;
-  status: 'Indicação' | 'Contato comercial' | 'Em negociacao' | 'Sem interesse' | 'Aprovado';
+  status: 'Indicação' | 'Contato comercial' | 'Em negociacao' | 'Sem Interesse ou Reprovado' | 'Aprovado';
 }
 
 interface DashboardData {
@@ -22,7 +22,7 @@ interface DashboardData {
 
 interface ReferralData {
   id: string;
-  status: 'Indicação' | 'Contato comercial' | 'Em negociacao' | 'Sem interesse' | 'Aprovado';
+  status: 'Indicação' | 'Contato comercial' | 'Em negociacao' | 'Sem Interesse ou Reprovado' | 'Aprovado';
   created_at: string;
   referred_user: {
     name: string;
@@ -82,7 +82,7 @@ export const useDashboardData = () => {
         const indicacaoCount = typedReferralsData.filter(referral => referral.status === 'Indicação').length;
         const contatoComercialCount = typedReferralsData.filter(referral => referral.status === 'Contato comercial').length;
         const emNegociacaoCount = typedReferralsData.filter(referral => referral.status === 'Em negociacao').length;
-        const semInteresseCount = typedReferralsData.filter(referral => referral.status === 'Sem interesse').length;
+        const semInteresseCount = typedReferralsData.filter(referral => referral.status === 'Sem Interesse ou Reprovado').length;
         const aprovadosCount = typedReferralsData.filter(referral => referral.status === 'Aprovado').length;
 
         setData({
@@ -119,7 +119,7 @@ export const formatStatus = (status: string) => {
     indicacao: 'Indicação',
     contato_comercial: 'Contato Comercial',
     em_negociacao: 'Em Negociação',
-    sem_interesse: 'Sem Interesse',
+    sem_interesse: 'Sem Interesse ou Reprovado',
     aprovados: 'Aprovado'
   };
 

@@ -12,15 +12,86 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import ReferralForm from "@/components/ReferralForm";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function Dashboard() {
+  const router = useRouter();
   const { data, loading } = useDashboardData();
   const [mounted, setMounted] = useState(false);
   const [referralLink, setReferralLink] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const checkAuth = async () => {
+      setMounted(true);
+      
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+        if (sessionError) {
+          console.error("Erro na sessão:", sessionError);
+          toast.error("Erro ao verificar sua sessão");
+          router.push("/onboarding");
+          return;
+        }
+
+        if (!session || !session.user) {
+          console.log("Nenhuma sessão encontrada");
+          toast.error("Você precisa estar logado para acessar esta página");
+          window.location.href = "/onboarding";
+          return;
+        }
+
+        console.log("Usuário autenticado:", session.user);
+
+        const userId = session.user.id;
+
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', userId)
+          .single();
+
+        if (userError) {
+          console.error("Erro ao buscar dados do usuário:", userError);
+          toast.error("Não foi possível verificar suas permissões");
+          router.push("/");
+          return;
+        }
+
+        if (!userData) {
+          console.log("Usuário não encontrado na tabela users");
+          toast.error("Perfil de usuário não encontrado");
+          router.push("/");
+          return;
+        }
+
+        console.log("Tipo de usuário:", userData.user_type);
+
+        if (userData.user_type === 'Admin' || userData.user_type === 'Parceiro') {
+          setIsAuthorized(true);
+        } else {
+          console.log("Usuário não autorizado:", userData.user_type);
+          toast.error("Acesso não autorizado. Esta página é restrita para Administradores e Parceiros.");
+          window.location.href = "/";
+          return;
+        }
+      } catch (error) {
+        console.error("Erro ao verificar autenticação:", error);
+        toast.error("Ocorreu um erro ao verificar suas permissões");
+        router.push("/");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []); 
+
+  useEffect(() => {
     if (data?.referenceLink) {
       setReferralLink(data.referenceLink);
     }
@@ -50,12 +121,16 @@ export default function Dashboard() {
     }
   };
 
-  if (!mounted || loading) {
+  if (!mounted || loading || isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-yellow-400" />
       </div>
     );
+  }
+
+  if (!isAuthorized) {
+    return null;
   }
 
   return (
@@ -73,6 +148,7 @@ export default function Dashboard() {
           </Button>
         </div>
 
+        
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogContent className="bg-[#121212] text-white max-w-[95vw] sm:max-w-[500px] p-4 sm:p-6">
             <DialogHeader>
@@ -81,6 +157,7 @@ export default function Dashboard() {
             <ReferralForm onSuccess={() => setIsModalOpen(false)} referralCode={data?.referralCode} />
           </DialogContent>
         </Dialog>
+
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8 mb-6 md:mb-8">
           <div className="lg:col-span-2 space-y-4 md:space-y-6">
@@ -106,7 +183,7 @@ export default function Dashboard() {
               <StatsCard
                 icon={Ban}
                 value={data.semInteresse}
-                label="Sem Interesse"
+                label="Sem Interesse ou Reprovado"
                 iconClassName="text-red-500"
               />
               <StatsCard
@@ -116,6 +193,7 @@ export default function Dashboard() {
                 iconClassName="text-green-500"
               />
             </div>
+
 
             <div className="bg-[#121212] rounded-lg p-3 sm:p-4 md:p-6">
               <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">Status das Indicações</h3>
@@ -136,17 +214,16 @@ export default function Dashboard() {
                         <TableCell>
                           <span
                             className={`px-2 py-1 inline-block text-center rounded-full text-xs ${referral.status === 'Indicação' ? 'bg-blue-500 text-white' :
-                              referral.status === 'Contato comercial' ? 'bg-yellow-500 text-black' :
-                                referral.status === 'Em negociacao' ? 'bg-purple-500 text-white' :
-                                  referral.status === 'Sem interesse' ? 'bg-red-500 text-white' :
-                                    referral.status === 'Aprovado' ? 'bg-green-500 text-white' :
-                                      'bg-gray-500 text-white'
+                                referral.status === 'Contato comercial' ? 'bg-yellow-500 text-black' :
+                                  referral.status === 'Em negociacao' ? 'bg-purple-500 text-white' :
+                                    referral.status === 'Sem Interesse ou Reprovado' ? 'bg-red-500 text-white' :
+                                      referral.status === 'Aprovado' ? 'bg-green-500 text-white' :
+                                        'bg-gray-500 text-white'
                               }`}
                           >
                             {formatStatus(referral.status)}
                           </span>
                         </TableCell>
-
                       </TableRow>
                     ))}
                   </TableBody>
@@ -185,6 +262,7 @@ export default function Dashboard() {
           </div>
         </div>
 
+
         <div className="bg-[#121212] rounded-lg p-3 sm:p-4 md:p-6">
           <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">Informações sobre Status</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
@@ -192,7 +270,7 @@ export default function Dashboard() {
               { icon: Users, color: "text-blue-500", label: "Indicação: Cliente indicado" },
               { icon: PhoneCall, color: "text-yellow-500", label: "Contato Comercial: Em contato" },
               { icon: Clock, color: "text-purple-500", label: "Em Negociação: Proposta em análise" },
-              { icon: Ban, color: "text-red-500", label: "Sem Interesse: Cliente recusou" },
+              { icon: Ban, color: "text-red-500", label: "Sem Interesse ou Reprovado: Cliente recusou" },
               { icon: CheckCircle, color: "text-green-500", label: "Aprovado: Negócio fechado" },
             ].map((item, index) => (
               <div key={index} className="flex items-center space-x-2">

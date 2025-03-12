@@ -22,7 +22,7 @@ interface Referral {
   id: string;
   referrer_id: string;
   referred_user_id: string;
-  status: 'Indicação' | 'Contato comercial' | 'Em negociação' | 'Sem interesse' | 'Aprovado';
+  status: 'Indicação' | 'Contato comercial' | 'Em negociação' | 'Sem Interesse ou Reprovado' | 'Aprovado';
   created_at: string;
   rejection_reason?: string;
   referrer: {
@@ -73,7 +73,7 @@ const statusLabels = {
   'Indicação': 'Indicação',
   'Contato comercial': 'Contato Comercial',
   'Em negociação': 'Em negociação',
-  'Sem interesse': 'Sem Interesse',
+  'Sem Interesse ou Reprovado': 'Sem Interesse ou Reprovado',
   'Aprovado': 'Aprovado',
 };
 
@@ -82,7 +82,7 @@ const statusColors = {
   'Indicação': '#818CF8',
   'Contato comercial': '#FBBF24',
   'Em negociação': '#9333EA',
-  'Sem interesse': '#F87171',
+  'Sem Interesse ou Reprovado': '#F87171',
   'Aprovado': '#34D399',
 };
 
@@ -248,7 +248,7 @@ export default function AdminPage() {
         const unitData: { [key: string]: number } = {};
         const partnerData: { [key: string]: number } = {};
         const timeSeries: { [key: string]: number } = {};
-        const statusCount: { [key: string]: number } = { 'Indicação': 0, 'Contato comercial': 0, 'Em negociação': 0, 'Sem interesse': 0, 'Aprovado': 0 };
+        const statusCount: { [key: string]: number } = { 'Indicação': 0, 'Contato comercial': 0, 'Em negociação': 0, 'Sem Interesse ou Reprovado': 0, 'Aprovado': 0 };
         const monthlyCount: { [key: string]: number } = {};
 
         referralsResponse.data?.forEach((referral: Referral) => {
@@ -296,8 +296,8 @@ export default function AdminPage() {
     fetchData();
   }, [user, router]);
 
-  const handleStatusChange = (referralId: string, newStatus: 'Indicação' | 'Contato comercial' | 'Em negociação' | 'Sem interesse' | 'Aprovado') => {
-    if (newStatus === 'Sem interesse') {
+  const handleStatusChange = (referralId: string, newStatus: 'Indicação' | 'Contato comercial' | 'Em negociação' | 'Sem Interesse ou Reprovado' | 'Aprovado') => {
+    if (newStatus === 'Sem Interesse ou Reprovado') {
       setCurrentReferralId(referralId);
       setIsRejectionModalOpen(true);
     } else {
@@ -311,7 +311,7 @@ export default function AdminPage() {
         const { error } = await supabase
           .from('referrals')
           .update({ 
-            status: 'Sem interesse',
+            status: 'Sem Interesse ou Reprovado',
             rejection_reason: reason 
           })
           .eq('id', currentReferralId);
@@ -324,7 +324,7 @@ export default function AdminPage() {
           const updated = prev.map(ref => 
             ref.id === currentReferralId ? { 
               ...ref, 
-              status: 'Sem interesse' as 'Indicação' | 'Contato comercial' | 'Em negociação' | 'Sem interesse' | 'Aprovado', 
+              status: 'Sem Interesse ou Reprovado' as 'Indicação' | 'Contato comercial' | 'Em negociação' | 'Sem Interesse ou Reprovado' | 'Aprovado', 
               rejection_reason: reason 
             } : ref
           );
@@ -344,7 +344,7 @@ export default function AdminPage() {
   };
   
 
-  const updateReferralStatus = async (referralId: string, newStatus: 'Indicação' | 'Contato comercial' | 'Em negociação' | 'Sem interesse' | 'Aprovado') => {
+  const updateReferralStatus = async (referralId: string, newStatus: 'Indicação' | 'Contato comercial' | 'Em negociação' | 'Sem Interesse ou Reprovado' | 'Aprovado') => {
     try {
       const { error } = await supabase
         .from('referrals')
@@ -357,7 +357,7 @@ export default function AdminPage() {
 
       setReferrals(prev => {
         const updated = prev.map(ref =>
-          ref.id === referralId ? { ...ref, status: newStatus as 'Indicação' | 'Contato comercial' | 'Em negociação' | 'Sem interesse' | 'Aprovado' } : ref
+          ref.id === referralId ? { ...ref, status: newStatus as 'Indicação' | 'Contato comercial' | 'Em negociação' | 'Sem Interesse ou Reprovado' | 'Aprovado' } : ref
         );
 
         recalculateStatusData(updated);
@@ -375,7 +375,7 @@ export default function AdminPage() {
       'Indicação': 0,
       'Contato comercial': 0,
       'Em negociação': 0,
-      'Sem interesse': 0,
+      'Sem Interesse ou Reprovado': 0,
       'Aprovado': 0
     };
 
@@ -424,7 +424,7 @@ export default function AdminPage() {
           <StatusCard icon={Users} label="Indicação" value={statusData.find(s => s.name === 'Indicação')?.value || 0} color={statusColors['Indicação']} />
           <StatusCard icon={PhoneCall} label="Contato Comercial" value={statusData.find(s => s.name === 'Contato Comercial')?.value || 0} color={statusColors['Contato comercial']} />
           <StatusCard icon={Clock} label="Em negociação" value={statusData.find(s => s.name === 'Em negociação')?.value || 0} color={statusColors['Em negociação']} />
-          <StatusCard icon={Ban} label="Sem Interesse" value={statusData.find(s => s.name === 'Sem Interesse')?.value || 0} color={statusColors['Sem interesse']} />
+          <StatusCard icon={Ban} label="Sem Interesse ou Reprovado" value={statusData.find(s => s.name === 'Sem Interesse ou Reprovado')?.value || 0} color={statusColors['Sem Interesse ou Reprovado']} />
           <StatusCard icon={CheckCircle} label="Aprovado" value={statusData.find(s => s.name === 'Aprovado')?.value || 0} color={statusColors['Aprovado']} />
         </div>
 
@@ -624,13 +624,13 @@ export default function AdminPage() {
                                 </div>
                               </SelectItem>
                               <SelectItem
-                                value="Sem interesse"
+                                value="Sem Interesse ou Reprovado"
                                 className="hover:bg-gray-600 text-white"
-                                disabled={referral.status === 'Sem interesse'}
+                                disabled={referral.status === 'Sem Interesse ou Reprovado'}
                               >
                                 <div className="flex items-center gap-2">
-                                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: statusColors['Sem interesse'] }}></span>
-                                  Sem interesse
+                                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: statusColors['Sem Interesse ou Reprovado'] }}></span>
+                                  Sem Interesse ou Reprovado
                                 </div>
                               </SelectItem>
                               <SelectItem
