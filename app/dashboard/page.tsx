@@ -169,7 +169,6 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="bg-[#121212] rounded-lg p-3 sm:p-4 md:p-6">
-              <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">Ranking de Indicações</h3>
               <RankingList />
             </div>
           </div>

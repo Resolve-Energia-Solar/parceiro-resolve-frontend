@@ -63,7 +63,7 @@ export function RankingList() {
       transition={{ duration: 0.5 }}
       className="max-w-3xl mx-auto p-6 bg-black rounded-lg shadow-xl"
     >
-      <h2 className="text-3xl font-bold mb-8 text-yellow-400 text-center">Ranking de Indicações</h2>
+      <h2 className="text-3xl font-bold mb-8 text-yellow-400 text-center">Ranking de vendas convertidas</h2>
       {userRank > 0 && (
         <motion.div
           variants={highlightVariants}
@@ -98,7 +98,7 @@ export function RankingList() {
                 <div>
                   <p className="font-medium">{rankUser.name}</p>
                   <p className="text-sm opacity-75">
-                    {rankUser.referral_count} indicações
+                    {rankUser.referral_count} vendas convertidas
                   </p>
                 </div>
               </div>

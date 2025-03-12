@@ -420,7 +420,8 @@ export default function Home() {
               <motion.h2 variants={fadeInUp} className="text-4xl font-bold mb-6 text-black">O Prêmio</motion.h2>
               <motion.div variants={fadeInUp} className="space-y-4 text-lg text-black mb-8">
                 <p>
-                  Os 4 participantes que mais indicarem amigos ganharão um iPhone 15 128GB.
+                Consulte o Regulamento para obter informações detalhadas
+                sobre a premiação
                 </p>
                 <ul className="space-y-2">
                   <motion.li variants={fadeInUp} className="flex items-center">
@@ -483,7 +484,7 @@ export default function Home() {
                 transition={{ delay: 0.3 }}
                 className="absolute -bottom-6 -right-6 bg-black text-white p-4 rounded-lg shadow-lg"
               >
-                <p className="text-lg font-bold">Top 4 Ganham!</p>
+                <p className="text-lg font-bold">Top 2 Ganham!</p>
               </motion.div>
             </motion.div>
           </motion.div>
