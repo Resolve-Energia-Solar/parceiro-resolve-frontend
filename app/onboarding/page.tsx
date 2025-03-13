@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Calendar, FileText, User, Mail, Phone, MapPin } from "lucide-react";
+import { Calendar, FileText, User, Mail, Phone, MapPin, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import InputMask from 'react-input-mask';
 import { supabase } from "@/lib/supabase";
@@ -53,6 +53,21 @@ export default function OnboardingPage() {
       setUnits(unitsData);
     } catch (error) {
       console.error("Erro ao carregar unidades:", error);
+    }
+  };
+
+  const handleBack = () => {
+    if (step === "confirmation") {
+      setStep("login");
+      setFormData(prev => ({
+        ...prev,
+        name: "",
+        email: "",
+        telefone: "",
+        unit: ""
+      }));
+    } else {
+      setStep("start");
     }
   };
 
@@ -116,7 +131,10 @@ export default function OnboardingPage() {
   const handleAuth = async () => {
     setIsLoading(true);
     try {
-      if (!validateForm()) return;
+      if (!validateForm()) {
+        setIsLoading(false);
+        return;
+      }
 
       if (step === "login") {
         const authUser = await signInWithCpfAndBirthDate(formData.cpf, formData.birthDate);
@@ -159,6 +177,17 @@ export default function OnboardingPage() {
 
         if (newUser) {
           setStep("confirmation");
+          setTimeout(() => {
+            setStep("login");
+            setFormData(prev => ({
+              ...prev,
+              name: "",
+              email: "",
+              telefone: "",
+              unit: ""
+            }));
+            toast.info("Você já pode fazer login com seu CPF e data de nascimento!");
+          }, 5000);
         }
       }
     } catch (error: any) {
@@ -168,8 +197,6 @@ export default function OnboardingPage() {
       setIsLoading(false);
     }
   };
-
-
 
   const handleResendConfirmation = async () => {
     setIsLoading(true);
@@ -185,6 +212,14 @@ export default function OnboardingPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-6">
+      {step !== "start" && (
+          <Button
+            onClick={handleBack}
+            className="absolute top-4 left-4 bg-transparent hover:bg-gray-800 text-yellow-400 border border-yellow-400 px-4 py-2 rounded-lg flex items-center gap-2"
+          >
+            <ArrowLeft size={20} /> Voltar
+          </Button>
+        )}
       <Image
         src="https://fortaleza-aldeota.resolvenergiasolar.com/wp-content/uploads/2024/11/Logo-resolve-1024x279.webp"
         alt="Logo"
@@ -196,8 +231,10 @@ export default function OnboardingPage() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="w-full max-w-md text-center bg-gray-900 p-8 rounded-xl shadow-lg border border-yellow-500"
+        className="w-full max-w-md text-center bg-gray-900 p-8 rounded-xl shadow-lg border border-yellow-500 relative"
       >
+        
+
         {step === "start" && (
           <>
             <motion.h2
@@ -219,12 +256,13 @@ export default function OnboardingPage() {
                 onClick={() => setStep("register")}
                 className="w-full bg-gray-700 hover:bg-gray-800 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2"
               >
-                <User size={20} />quero me cadastrar
+                <User size={20} /> quero me cadastrar
               </Button>
             </div>
           </>
         )}
-        {(step === "login" || step === "register") && (
+
+        {step === "login" && (
           <>
             <motion.h2
               initial={{ x: -50, opacity: 0 }}
@@ -232,144 +270,139 @@ export default function OnboardingPage() {
               transition={{ duration: 0.4 }}
               className="text-3xl font-bold mb-6 text-yellow-400"
             >
-              {step === "login" ? "Faça seu Login" : "Crie sua Conta"}
+              Faça seu Login
             </motion.h2>
             <div className="flex flex-col gap-4">
-              {step === "login" && (
-                <>
-                  <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
-                    <FileText size={20} className="mr-2 text-yellow-400" />
-                    <InputMask
-                      mask="999.999.999-99"
-                      maskChar=""
-                      type="text"
-                      name="cpf"
-                      placeholder="CPF"
-                      className="w-full bg-transparent text-white outline-none"
-                      value={formData.cpf}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
-                    <Calendar size={20} className="mr-2 text-yellow-400" />
-                    <InputMask
-                      mask="99/99/9999"
-                      maskChar=""
-                      type="text"
-                      name="birthDate"
-                      id="birthDate"
-                      placeholder="dd/mm/aaaa"
-                      className="w-full h-10 bg-transparent text-white outline-none"
-                      value={formData.birthDate}
-                      onChange={handleChange}
-                      style={{
-                        fontSize: '16px',
-                        caretColor: 'white',
-                        minHeight: '44px',
-                        WebkitTapHighlightColor: 'rgba(255, 255, 255, 0.2)',
-                      }}
-                    />
-                  </div>
-                </>
-              )}
-              {step === "register" && (
-                <>
-                  <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
-                    <User size={20} className="mr-2 text-yellow-400" />
-                    <input
-                      type="text"
-                      name="name"
-                      placeholder="Seu nome"
-                      className="w-full bg-transparent text-white outline-none"
-                      value={formData.name}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
-                    <FileText size={20} className="mr-2 text-yellow-400" />
-                    <InputMask
-                      mask="999.999.999-99"
-                      maskChar=""
-                      type="text"
-                      name="cpf"
-                      placeholder="CPF"
-                      className="w-full bg-transparent text-white outline-none"
-                      value={formData.cpf}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
-                    <Mail size={20} className="mr-2 text-yellow-400" />
-                    <input
-                      type="email"
-                      name="email"
-                      placeholder="E-mail"
-                      className="w-full bg-transparent text-white outline-none"
-                      value={formData.email}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
-                    <Phone size={20} className="mr-2 text-yellow-400" />
-                    <InputMask
-                      mask="(99) 99999-9999"
-                      maskChar=""
-                      type="text"
-                      name="telefone"
-                      placeholder="Telefone"
-                      className="w-full bg-transparent text-white outline-none"
-                      value={formData.telefone}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
-                    <Calendar size={24} className="mr-3 text-yellow-400 flex-shrink-0" />
-                    <InputMask
-                      mask="99/99/9999"
-                      maskChar=""
-                      type="text"
-                      name="birthDate"
-                      placeholder="dd/mm/aaaa"
-                      className="w-full bg-transparent text-white outline-none text-lg py-2 px-1 touch-manipulation"
-                      value={formData.birthDate}
-                      onChange={handleChange}
-                      style={{
-                        fontSize: '16px',
-                        WebkitAppearance: 'none',
-                        borderRadius: '4px',
-                        touchAction: 'manipulation'
-                      }}
-                    />
-                  </div>
-
-
-                  <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
-                    <MapPin size={20} className="mr-2 text-yellow-400" />
-                    <select
-                      name="unit"
-                      value={formData.unit}
-                      onChange={handleChange}
-                      className="w-full bg-transparent text-white outline-none"
-                    >
-                      <option value="">Selecione uma unidade</option>
-                      {units.map((unit) => (
-                        <option key={unit.id} value={unit.id}>{unit.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                </>
-              )}
+              <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
+                <FileText size={20} className="mr-2 text-yellow-400" />
+                <InputMask
+                  mask="999.999.999-99"
+                  maskChar=""
+                  type="text"
+                  name="cpf"
+                  placeholder="CPF"
+                  className="w-full bg-transparent text-white outline-none"
+                  value={formData.cpf}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
+                <Calendar size={20} className="mr-2 text-yellow-400" />
+                <InputMask
+                  mask="99/99/9999"
+                  maskChar=""
+                  type="text"
+                  name="birthDate"
+                  placeholder="Data de Nascimento"
+                  className="w-full bg-transparent text-white outline-none"
+                  value={formData.birthDate}
+                  onChange={handleChange}
+                />
+              </div>
             </div>
-            <Button
-              onClick={handleAuth}
-              disabled={isLoading}
-              className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 rounded-lg mt-4"
-            >
-              {isLoading ? "Processando..." : (step === "login" ? "Entrar" : "Cadastrar")}
-            </Button>
           </>
         )}
+
+        {step === "register" && (
+          <>
+            <motion.h2
+              initial={{ x: -50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.4 }}
+              className="text-3xl font-bold mb-6 text-yellow-400"
+            >
+              Crie sua Conta
+            </motion.h2>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
+                <User size={20} className="mr-2 text-yellow-400" />
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Seu nome"
+                  className="w-full bg-transparent text-white outline-none"
+                  value={formData.name}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
+                <FileText size={20} className="mr-2 text-yellow-400" />
+                <InputMask
+                  mask="999.999.999-99"
+                  maskChar=""
+                  type="text"
+                  name="cpf"
+                  placeholder="CPF"
+                  className="w-full bg-transparent text-white outline-none"
+                  value={formData.cpf}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
+                <Mail size={20} className="mr-2 text-yellow-400" />
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="E-mail"
+                  className="w-full bg-transparent text-white outline-none"
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
+                <Phone size={20} className="mr-2 text-yellow-400" />
+                <InputMask
+                  mask="(99) 99999-9999"
+                  maskChar=""
+                  type="text"
+                  name="telefone"
+                  placeholder="Telefone"
+                  className="w-full bg-transparent text-white outline-none"
+                  value={formData.telefone}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
+                <Calendar size={20} className="mr-2 text-yellow-400" />
+                <InputMask
+                  mask="99/99/9999"
+                  maskChar=""
+                  type="text"
+                  name="birthDate"
+                  placeholder="Data de Nascimento"
+                  className="w-full bg-transparent text-white outline-none"
+                  value={formData.birthDate}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
+                <MapPin size={20} className="mr-2 text-yellow-400" />
+                <select
+                  name="unit"
+                  value={formData.unit}
+                  onChange={handleChange}
+                  className="w-full bg-transparent text-white outline-none"
+                >
+                  <option value="">Selecione uma unidade</option>
+                  {units.map((unit) => (
+                    <option key={unit.id} value={unit.id}>{unit.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </>
+        )}
+
+        {(step === "login" || step === "register") && (
+          <Button
+            onClick={handleAuth}
+            disabled={isLoading}
+            className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 rounded-lg mt-4"
+          >
+            {isLoading ? "Processando..." : (step === "login" ? "Entrar" : "Cadastrar")}
+          </Button>
+        )}
+
         {step === "confirmation" && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -380,6 +413,9 @@ export default function OnboardingPage() {
             <p className="mb-4">
               Um e-mail de confirmação foi enviado para {formData.email}.
               Por favor, verifique sua caixa de entrada e clique no link de confirmação para ativar sua conta.
+            </p>
+            <p className="mb-4">
+              Você será redirecionado para a tela de login em alguns segundos...
             </p>
             <p className="mb-4">
               Não recebeu o e-mail? Verifique sua pasta de spam ou clique abaixo para reenviar.
@@ -398,3 +434,4 @@ export default function OnboardingPage() {
     </div>
   );
 }
+
