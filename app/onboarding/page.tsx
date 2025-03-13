@@ -219,7 +219,7 @@ export default function OnboardingPage() {
                 onClick={() => setStep("register")}
                 className="w-full bg-gray-700 hover:bg-gray-800 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2"
               >
-                <User size={20} /> Não, quero me cadastrar
+                <User size={20} />quero me cadastrar
               </Button>
             </div>
           </>
