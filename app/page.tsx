@@ -131,16 +131,17 @@ export default function Home() {
                 variants={fadeInUp}
                 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight mb-4 md:mb-6"
               >
-                Indique amigos, acumule vendas convertidas e<br />
+                Indique amigos, transforme indicações em vendas<br />
                 <span className="text-primary">
-                  e concorra a um iPhone 15!
+                  e ganhe um iPhone 15!
                 </span>
               </motion.h1>
               <motion.p
                 variants={fadeInUp}
                 className="text-base sm:text-lg md:text-xl text-gray-300 mb-6 md:mb-8"
               >
-                Vendas convertidas contabilizam para o ranking. Quem tiver mais vendas até 31/03/2025 concorre a um iPhone! </motion.p>
+                As indicações que resultarem em vendas confirmadas contam para o ranking.
+                Quem converter mais indicações em vendas válidas até 31/03/2025 leva um iPhone 15 para casa! </motion.p>
               <motion.div variants={fadeInUp}>
                 <Link href="/onboarding">
                   <Button size="lg" className="w-full md:w-auto animate-pulse bg-primary text-black hover:bg-primary/90">
