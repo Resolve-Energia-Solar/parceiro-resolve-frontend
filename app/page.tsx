@@ -131,9 +131,9 @@ export default function Home() {
                 variants={fadeInUp}
                 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight mb-4 md:mb-6"
               >
-                Indique amigos, acumule pontos e<br />
+                Indique amigos<br />
                 <span className="text-primary">
-                  concorra a um iPhone 15!
+                  e concorra a um iPhone 15!
                 </span>
               </motion.h1>
               <motion.p
