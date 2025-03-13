@@ -18,6 +18,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
+      <head>
+        <link rel="manifest" href="" />
+        <link rel="icon" href="/icon.ico" />
+        <meta name="theme-color" content="#ffffff" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" />
+      </head>
       <body className={inter.className}>
         <ClientInitializers />
         {children}
