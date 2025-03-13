@@ -220,7 +220,7 @@ export default function Dashboard() {
                           <span
                             className={`px-2 py-1 inline-block text-center rounded-full text-xs ${referral.status === 'Indicação' ? 'bg-blue-500 text-white' :
                               referral.status === 'Contato comercial' ? 'bg-yellow-500 text-black' :
-                                referral.status === 'Em negociacao' ? 'bg-purple-500 text-white' :
+                                referral.status === 'Em negociação' ? 'bg-purple-500 text-white' :
                                   referral.status === 'Sem Interesse ou Reprovado' ? 'bg-red-500 text-white' :
                                     referral.status === 'Aprovado' ? 'bg-green-500 text-white' :
                                       'bg-gray-500 text-white'
