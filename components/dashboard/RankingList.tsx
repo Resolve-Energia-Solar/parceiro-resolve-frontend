@@ -98,7 +98,7 @@ export function RankingList() {
                 <div>
                   <p className="font-medium">{rankUser.name}</p>
                   <p className="text-sm opacity-75">
-                    {rankUser.referral_count} vendas convertidas
+                    {rankUser.approved_referrals} vendas convertidas
                   </p>
                 </div>
               </div>

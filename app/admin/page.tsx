@@ -380,22 +380,51 @@ export default function AdminPage() {
 
   const updateReferralStatus = async (referralId: string, newStatus: 'Indicação' | 'Contato comercial' | 'Em negociação' | 'Sem Interesse ou Reprovado' | 'Aprovado') => {
     try {
+      const { data: referralData, error: fetchError } = await supabase
+        .from('referrals')
+        .select('referrer_id, status')
+        .eq('id', referralId)
+        .single();
+  
+      if (fetchError) throw fetchError;
+  
       const { error } = await supabase
         .from('referrals')
         .update({ status: newStatus })
         .eq('id', referralId);
-
+  
       if (error) throw error;
-
+  
+      if (newStatus === 'Aprovado' && referralData?.status !== 'Aprovado' && referralData?.referrer_id) {
+        const { data: userData, error: userFetchError } = await supabase
+          .from('users')
+          .select('approved_referrals')
+          .eq('id', referralData.referrer_id)
+          .single();
+        
+        if (userFetchError) throw userFetchError;
+        
+        const currentCount = userData?.approved_referrals || 0;
+        
+        const { error: userUpdateError } = await supabase
+          .from('users')
+          .update({ approved_referrals: currentCount + 1 })
+          .eq('id', referralData.referrer_id);
+        
+        if (userUpdateError) throw userUpdateError;
+        
+        console.log(`Contador de indicações aprovadas incrementado para o usuário ${referralData.referrer_id}`);
+      }
+  
       toast.success(`Status atualizado para ${statusLabels[newStatus]}`);
-
+  
       setReferrals(prev => {
         const updated = prev.map(ref =>
           ref.id === referralId ? { ...ref, status: newStatus as 'Indicação' | 'Contato comercial' | 'Em negociação' | 'Sem Interesse ou Reprovado' | 'Aprovado' } : ref
         );
-
+  
         recalculateStatusData(updated);
-
+  
         return updated;
       });
     } catch (error: any) {
@@ -403,6 +432,7 @@ export default function AdminPage() {
       toast.error('Erro ao atualizar status');
     }
   };
+  
 
   const recalculateStatusData = (referrals: Referral[]) => {
     const statusCount: { [key: string]: number } = {

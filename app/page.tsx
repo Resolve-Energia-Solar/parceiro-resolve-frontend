@@ -64,7 +64,7 @@ export default function Home() {
       try {
         const { data, error } = await supabase
           .from('users')
-          .select('name, referral_count')
+          .select('name, approved_referrals')
           .order('referral_count', { ascending: false })
           .limit(5);
 
@@ -72,7 +72,7 @@ export default function Home() {
 
         const formattedData = data.map((user, index) => ({
           name: user.name,
-          referrals: user.referral_count,
+          referrals: user.approved_referrals,
           position: index + 1
         }));
 
