@@ -131,7 +131,7 @@ export default function Home() {
                 variants={fadeInUp}
                 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight mb-4 md:mb-6"
               >
-                Indique amigos<br />
+                ndique amigos, acumule vendas convertidas e<br />
                 <span className="text-primary">
                   e concorra a um iPhone 15!
                 </span>
