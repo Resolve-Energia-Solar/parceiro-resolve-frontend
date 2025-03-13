@@ -99,7 +99,7 @@ export function Header({ className }: HeaderProps) {
               </motion.div>
             )}
 
-            <div className="relative" ref={notificationsRef}>
+            {/* <div className="relative" ref={notificationsRef}>
               <Bell
                 className="w-6 h-6 cursor-pointer text-gray-300 hover:text-white transition-colors"
                 onClick={() => setShowNotifications(!showNotifications)}
@@ -118,7 +118,7 @@ export function Header({ className }: HeaderProps) {
                 </div>
               )}
             </div>
-
+ */}
             <div className="relative" ref={dropdownRef}>
               <div
                 className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center cursor-pointer"
