@@ -582,10 +582,7 @@ export default function Home() {
                   Como funciona o sistema de indicações?
                 </AccordionTrigger>
                 <AccordionContent className="text-sm md:text-base text-gray-600">
-                  Após o cadastro, você receberá um link
-                  exclusivo. Compartilhe-o com amigos e familiares. Cada preenchimento realizado através do
-                  seu link será registrado como uma indicação. No entanto, os pontos do ranking para concorrer
-                  ao iPhone 15 serão contabilizados apenas para indicações convertidas em venda. </AccordionContent>
+                  Após o cadastro, você receberá um link exclusivo. Compartilhe-o com amigos e familiares. Cada preenchimento realizado através do seu link será registrado como uma indicação. No entanto, o ranking para concorrer ao iPhone 15 será contabilizado apenas para indicações convertidas em venda. </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-2" className="border rounded-lg px-4 md:px-6">
