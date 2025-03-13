@@ -420,6 +420,12 @@ export default function AdminPage() {
 
       if (fetchError) throw fetchError;
 
+      const previousStatus = referralData?.status;
+
+      console.log(`Atualizando status da indicação ${referralId}`);
+      console.log(`Status anterior: "${previousStatus}", Novo status: "${newStatus}"`);
+      console.log(`Condição de decremento: ${previousStatus === 'Aprovado' && newStatus !== 'Aprovado'}`);
+
       const { error } = await supabase
         .from('referrals')
         .update({ status: newStatus })
@@ -427,7 +433,7 @@ export default function AdminPage() {
 
       if (error) throw error;
 
-      if (newStatus === 'Aprovado' && referralData?.status !== 'Aprovado' && referralData?.referrer_id) {
+      if (referralData?.referrer_id) {
         const { data: userData, error: userFetchError } = await supabase
           .from('users')
           .select('approved_referrals')
@@ -437,22 +443,45 @@ export default function AdminPage() {
         if (userFetchError) throw userFetchError;
 
         const currentCount = userData?.approved_referrals || 0;
+        console.log(`Contador atual de aprovações: ${currentCount}`);
 
-        const { error: userUpdateError } = await supabase
-          .from('users')
-          .update({ approved_referrals: currentCount + 1 })
-          .eq('id', referralData.referrer_id);
+        if (newStatus === 'Aprovado' && previousStatus !== 'Aprovado') {
+          const { error: userUpdateError } = await supabase
+            .from('users')
+            .update({ approved_referrals: currentCount + 1 })
+            .eq('id', referralData.referrer_id);
 
-        if (userUpdateError) throw userUpdateError;
+          if (userUpdateError) throw userUpdateError;
 
-        console.log(`Contador de indicações aprovadas incrementado para o usuário ${referralData.referrer_id}`);
+          console.log(`Contador incrementado para: ${currentCount + 1}`);
+        }
+        else if (String(previousStatus).trim() === 'Aprovado' && newStatus !== 'Aprovado') {
+          const newCount = Math.max(0, currentCount - 1);
+
+          const { error: userUpdateError } = await supabase
+            .from('users')
+            .update({ approved_referrals: newCount })
+            .eq('id', referralData.referrer_id);
+
+          if (userUpdateError) throw userUpdateError;
+
+          console.log(`Contador decrementado para: ${newCount}`);
+
+          const { data: checkData } = await supabase
+            .from('users')
+            .select('approved_referrals')
+            .eq('id', referralData.referrer_id)
+            .single();
+
+          console.log(`Confirmação após atualização: ${checkData?.approved_referrals}`);
+        }
       }
 
       toast.success(`Status atualizado para ${statusLabels[newStatus]}`);
 
       setReferrals(prev => {
         const updated = prev.map(ref =>
-          ref.id === referralId ? { ...ref, status: newStatus as 'Indicação' | 'Contato comercial' | 'Em negociação' | 'Sem Interesse ou Reprovado' | 'Aprovado' } : ref
+          ref.id === referralId ? { ...ref, status: newStatus } : ref
         );
 
         recalculateStatusData(updated);
@@ -464,7 +493,6 @@ export default function AdminPage() {
       toast.error('Erro ao atualizar status');
     }
   };
-
 
   const recalculateStatusData = (referrals: Referral[]) => {
     const statusCount: { [key: string]: number } = {
