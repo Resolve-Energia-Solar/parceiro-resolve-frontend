@@ -140,7 +140,7 @@ export default function Home() {
                 variants={fadeInUp}
                 className="text-base sm:text-lg md:text-xl text-gray-300 mb-6 md:mb-8"
               >
-                Cada indicação que se tornar cliente da Resolve conta como um ponto. Quem tiver mais pontos até 31/03/2025 leva um iphone para casa! </motion.p>
+                Vendas convertidas contabilizam para o ranking. Quem tiver mais vendas até 31/03/2025 concorre a um iPhone! </motion.p>
               <motion.div variants={fadeInUp}>
                 <Link href="/onboarding">
                   <Button size="lg" className="w-full md:w-auto animate-pulse bg-primary text-black hover:bg-primary/90">
@@ -253,8 +253,8 @@ export default function Home() {
                           viewport={{ once: true }}
                           transition={{ delay: 0.7 + index * 0.2 }}
                           className={`absolute -top-2 -right-2 ${index === 0 ? "bg-yellow-500" :
-                              index === 1 ? "bg-gray-400" :
-                                "bg-amber-600"
+                            index === 1 ? "bg-gray-400" :
+                              "bg-amber-600"
                             } text-black w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-base font-bold`}
                         >
                           {participant.position}
@@ -267,15 +267,15 @@ export default function Home() {
                             : participant.name}
                         </h3>
                         <p className={`text-xs md:text-sm ${index === 0 ? "text-yellow-400 font-semibold" :
-                            index === 1 ? "text-gray-400" :
-                              "text-amber-400"
+                          index === 1 ? "text-gray-400" :
+                            "text-amber-400"
                           }`}>{participant.referrals} vendas convertidas</p>
                       </div>
                     </motion.div>
                   </div>
                   <div className={`absolute bottom-0 w-full text-center py-1 md:py-2 text-xs md:text-sm ${index === 0 ? "bg-yellow-500/20 border-yellow-400/30" :
-                      index === 1 ? "bg-gray-500/20 border-gray-400/30" :
-                        "bg-amber-500/20 border-amber-400/30"
+                    index === 1 ? "bg-gray-500/20 border-gray-400/30" :
+                      "bg-amber-500/20 border-amber-400/30"
                     } backdrop-blur-sm rounded-t-lg border-t`}>
                     {participant.position}º Lugar
                   </div>
@@ -295,17 +295,17 @@ export default function Home() {
                   whileInView="animate"
                   viewport={{ once: true }}
                   className={`relative overflow-hidden rounded-xl p-3 ${index === 0
-                      ? "bg-gradient-to-r from-yellow-500/10 to-yellow-500/5 border border-yellow-500/20"
-                      : index === 1
-                        ? "bg-gradient-to-r from-gray-500/10 to-gray-500/5 border border-gray-500/20"
-                        : "bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20"
+                    ? "bg-gradient-to-r from-yellow-500/10 to-yellow-500/5 border border-yellow-500/20"
+                    : index === 1
+                      ? "bg-gradient-to-r from-gray-500/10 to-gray-500/5 border border-gray-500/20"
+                      : "bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20"
                     }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${index === 0 ? "bg-yellow-500/20 border border-yellow-400" :
-                          index === 1 ? "bg-gray-500/20 border border-gray-400" :
-                            "bg-amber-500/20 border border-amber-400"
+                        index === 1 ? "bg-gray-500/20 border border-gray-400" :
+                          "bg-amber-500/20 border border-amber-400"
                         }`}>
                         {getPositionIcon(participant.position)}
                       </div>
@@ -319,8 +319,8 @@ export default function Home() {
                       </div>
                     </div>
                     <div className={`text-xl font-bold ${index === 0 ? "text-yellow-400" :
-                        index === 1 ? "text-gray-400" :
-                          "text-amber-400"
+                      index === 1 ? "text-gray-400" :
+                        "text-amber-400"
                       }`}>
                       #{participant.position}
                     </div>
