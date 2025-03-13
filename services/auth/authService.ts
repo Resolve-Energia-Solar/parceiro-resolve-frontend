@@ -188,52 +188,96 @@ async function signUp({
 export async function signInWithCpfAndBirthDate(cpf: string, birthDate: string) {
   try {
     const formattedCpf = formatCpf(cpf);
-    const formattedBirthDate = formatBirthDateForDB(birthDate);
-
+    
+    let formattedBirthDate = formatBirthDateForDB(birthDate);
+    
     console.log('Tentando login com:', { cpf: formattedCpf, birthDate: formattedBirthDate });
 
-    // Busca usuário no banco de dados pelo CPF e data de nascimento
     const { data: user, error } = await supabase
       .from("users")
       .select("email, id, birthdate")
       .eq("cpf", formattedCpf)
-      .eq("birthdate", formattedBirthDate)
       .single();
 
     if (error || !user) {
       console.error('Usuário não encontrado:', error);
-      throw new Error("CPF ou data de nascimento inválidos");
+      throw new Error("CPF inválido ou usuário não encontrado");
     }
 
     console.log('Usuário encontrado:', user);
 
-    // Usa a data exata do banco de dados como senha
-    const password = user.birthdate;
+    const inputDate = new Date(birthDate.replace(/(\d+)\/(\d+)\/(\d+)/, '$3-$2-$1'));
+    const dbDate = new Date(user.birthdate);
+    
+    if (inputDate.getTime() !== dbDate.getTime()) {
+      console.error('Data de nascimento não corresponde:', {
+        input: inputDate,
+        db: dbDate
+      });
+      throw new Error("Data de nascimento incorreta");
+    }
 
     console.log('Tentando autenticar com email:', user.email);
 
-    // Autentica com o email do usuário e a data de nascimento como senha
-    const { data, error: signInError } = await supabase.auth.signInWithPassword({
-      email: user.email,
-      password: password,
-    });
-
-    if (signInError) {
-      console.error('Erro de login:', signInError);
-      throw new Error("Falha na autenticação. Verifique suas credenciais.");
+    const possiblePasswords = [
+      birthDate,                                           
+      user.birthdate,                                       
+      inputDate.toISOString().split('T')[0],               
+      `${inputDate.getDate()}/${inputDate.getMonth()+1}/${inputDate.getFullYear()}`, 
+      `${inputDate.getDate().toString().padStart(2, '0')}/${(inputDate.getMonth()+1).toString().padStart(2, '0')}/${inputDate.getFullYear()}`, // DD/MM/YYYY padded
+    ];
+    
+    let authData;
+    let lastError;
+    
+    for (const password of possiblePasswords) {
+      try {
+        console.log(`Tentando senha: ${password}`);
+        const { data, error: signInError } = await supabase.auth.signInWithPassword({
+          email: user.email,
+          password: password,
+        });
+        
+        if (!signInError && data.user) {
+          authData = data;
+          break; 
+        }
+        
+        lastError = signInError;
+      } catch (e) {
+        lastError = e;
+      }
+    }
+    
+    if (!authData) {
+      console.error('Todos os formatos de senha falharam:', lastError);
+      
+      const { error: updateError } = await supabase.auth.updateUser({
+        email: user.email,
+        password: user.birthdate
+      });
+      
+      if (updateError) {
+        console.error('Erro ao redefinir senha:', updateError);
+        throw new Error("Falha na autenticação. Entre em contato com o suporte.");
+      }
+      const { data: newData, error: newSignInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: user.birthdate,
+      });
+      
+      if (newSignInError) {
+        throw new Error("Falha na autenticação após redefinir senha. Verifique suas credenciais.");
+      }
+      
+      authData = newData;
     }
 
-    if (!data.user) {
-      throw new Error("Usuário não encontrado após autenticação");
-    }
+    console.log('Login bem-sucedido:', authData.user);
 
-    console.log('Login bem-sucedido:', data.user);
-
-    // Registra a atividade de login do usuário
     await logUserActivity(user.id, 'login', 'User logged in');
 
-    // Retorna dados combinados do usuário
-    return { ...data.user, ...user };
+    return { ...authData.user, ...user };
   } catch (error) {
     console.error('Erro no login:', error);
     throw error;
