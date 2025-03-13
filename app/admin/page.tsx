@@ -17,6 +17,7 @@ import {
   PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
 import { LucideIcon } from 'lucide-react';
+import { Tooltip as CustomTooltip } from '@/components/ui/Tooltip';
 
 interface Referral {
   id: string;
@@ -35,6 +36,8 @@ interface Referral {
     }
   };
   referred_user: {
+    cpf: string;
+    telefone: string;
     name: string;
     email: string;
     unit_id: string;
@@ -199,6 +202,35 @@ export default function AdminPage() {
   const [currentReferralId, setCurrentReferralId] = useState<string | null>(null);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
+
+  const formatPhoneNumber = (phone: string) => {
+    if (!phone) return "—";
+
+    const cleaned = phone.replace(/\D/g, '');
+
+    if (cleaned.length === 11) {
+      return `(${cleaned.substring(0, 2)}) ${cleaned.substring(2, 7)}-${cleaned.substring(7, 11)}`;
+    } else if (cleaned.length === 10) {
+      return `(${cleaned.substring(0, 2)}) ${cleaned.substring(2, 6)}-${cleaned.substring(6, 10)}`;
+    } else if (cleaned.length === 8) {
+      return `${cleaned.substring(0, 4)}-${cleaned.substring(4, 8)}`;
+    } else {
+      return phone;
+    }
+  };
+
+  const formatCPF = (cpf: string) => {
+    if (!cpf) return "—";
+
+    const cleaned = cpf.replace(/\D/g, '');
+
+    if (cleaned.length === 11) {
+      return `${cleaned.substring(0, 3)}.${cleaned.substring(3, 6)}.${cleaned.substring(6, 9)}-${cleaned.substring(9, 11)}`;
+    } else {
+      return cpf;
+    }
+  };
+
   useEffect(() => {
     const checkAuthAndFetchData = async () => {
       if (!user) {
@@ -227,7 +259,7 @@ export default function AdminPage() {
         if (user.user_type === 'SDR') {
           const { data: userData, error: userError } = await supabase
             .from('users')
-            .select('unit_id')
+            .select('*, unit_id')
             .eq('id', user.id)
             .single();
 
@@ -246,7 +278,7 @@ export default function AdminPage() {
           .select(`
             *, 
             referrer:users!referrer_id (name, email, unit_id, unit:units(id, name)),
-            referred_user:users!referred_user_id (name, email, unit_id, unit:units(id, name))
+            referred_user:users!referred_user_id (name, email, cpf, telefone, unit_id, unit:units(id, name))
           `)
           .order('created_at', { ascending: false });
 
@@ -385,46 +417,46 @@ export default function AdminPage() {
         .select('referrer_id, status')
         .eq('id', referralId)
         .single();
-  
+
       if (fetchError) throw fetchError;
-  
+
       const { error } = await supabase
         .from('referrals')
         .update({ status: newStatus })
         .eq('id', referralId);
-  
+
       if (error) throw error;
-  
+
       if (newStatus === 'Aprovado' && referralData?.status !== 'Aprovado' && referralData?.referrer_id) {
         const { data: userData, error: userFetchError } = await supabase
           .from('users')
           .select('approved_referrals')
           .eq('id', referralData.referrer_id)
           .single();
-        
+
         if (userFetchError) throw userFetchError;
-        
+
         const currentCount = userData?.approved_referrals || 0;
-        
+
         const { error: userUpdateError } = await supabase
           .from('users')
           .update({ approved_referrals: currentCount + 1 })
           .eq('id', referralData.referrer_id);
-        
+
         if (userUpdateError) throw userUpdateError;
-        
+
         console.log(`Contador de indicações aprovadas incrementado para o usuário ${referralData.referrer_id}`);
       }
-  
+
       toast.success(`Status atualizado para ${statusLabels[newStatus]}`);
-  
+
       setReferrals(prev => {
         const updated = prev.map(ref =>
           ref.id === referralId ? { ...ref, status: newStatus as 'Indicação' | 'Contato comercial' | 'Em negociação' | 'Sem Interesse ou Reprovado' | 'Aprovado' } : ref
         );
-  
+
         recalculateStatusData(updated);
-  
+
         return updated;
       });
     } catch (error: any) {
@@ -432,7 +464,7 @@ export default function AdminPage() {
       toast.error('Erro ao atualizar status');
     }
   };
-  
+
 
   const recalculateStatusData = (referrals: Referral[]) => {
     const statusCount: { [key: string]: number } = {
@@ -636,130 +668,154 @@ export default function AdminPage() {
                 </Select>
               </div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-700">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Indicador</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Indicado</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Data</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Ações</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-gray-800 divide-y divide-gray-700">
-                  {currentReferrals.length > 0 ? (
-                    currentReferrals.map((referral) => (
-                      <tr key={referral.id} className="hover:bg-gray-750">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-100">{referral.referrer?.name || "—"}</div>
-                          <div className="text-sm text-gray-400">{referral.referrer?.email || "—"}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-100">{referral.referred_user?.name || "—"}</div>
-                          <div className="text-sm text-gray-400">{referral.referred_user?.email || "—"}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex flex-col">
-                            <span
-                              className="px-2 py-1 text-xs font-semibold rounded-full text-white w-fit"
-                              style={{ backgroundColor: statusColors[referral.status] || '#888888' }}
-                            >
-                              {statusLabels[referral.status] || referral.status}
-                            </span>
-                            {referral.rejection_reason && (
-                              <span className="text-xs text-gray-400 mt-1">
-                                Motivo: {referral.rejection_reason}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                          {new Date(referral.created_at).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex items-center text-white gap-2">
-                            <Select
-                              defaultValue={referral.status}
-                              onValueChange={(value) => handleStatusChange(referral.id, value as any)}
-                            >
-                              <SelectTrigger
-                                className="w-[140px]"
-                                style={{
-                                  backgroundColor: "rgba(31, 41, 55, 0.8)",
-                                  borderColor: statusColors[referral.status as keyof typeof statusColors] || '#6B7280',
-                                  borderWidth: "1.5px"
-                                }}
+            <div className="rounded-lg overflow-hidden shadow-md border border-gray-700">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-700">
+                  <thead className="bg-gray-700">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        Indicador
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        Indicado
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        Data
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        Ações
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-gray-800 divide-y divide-gray-700">
+                    {currentReferrals.length > 0 ? (
+                      currentReferrals.map((referral) => (
+                        <tr key={referral.id} className="hover:bg-gray-750">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-100">{referral.referrer?.name || "—"}</div>
+                            <div className="text-sm text-gray-400">{referral.referrer?.email || "—"}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <CustomTooltip content={
+                              <div className="flex flex-col gap-1">
+                                <p><strong>Telefone:</strong> {formatPhoneNumber(referral.referred_user?.telefone) || "—"}</p>
+                                <p><strong>CPF:</strong> {formatCPF(referral.referred_user?.cpf) || "—"}</p>
+                              </div>
+                            }>
+                              <div className="cursor-help">
+                                <div className="text-sm font-medium text-gray-100">{referral.referred_user?.name || "—"}</div>
+                                <div className="text-sm text-gray-400">{referral.referred_user?.email || "—"}</div>
+                              </div>
+                            </CustomTooltip>
+                          </td>
+
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex flex-col">
+                              <span
+                                className="px-2 py-1 text-xs font-semibold rounded-full text-white w-fit"
+                                style={{ backgroundColor: statusColors[referral.status] || '#888888' }}
                               >
-                                <SelectValue placeholder="Alterar status" />
-                              </SelectTrigger>
-                              <SelectContent className="bg-gray-700 border-gray-600">
-                                <SelectItem
-                                  value="Indicação"
-                                  className="hover:bg-gray-600 text-white"
-                                  disabled={referral.status === 'Indicação'}
+                                {statusLabels[referral.status] || referral.status}
+                              </span>
+                              {referral.rejection_reason && (
+                                <span className="text-xs text-gray-400 mt-1">
+                                  Motivo: {referral.rejection_reason}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                            {new Date(referral.created_at).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex items-center text-white gap-2">
+                              <Select
+                                defaultValue={referral.status}
+                                onValueChange={(value) => handleStatusChange(referral.id, value as any)}
+                              >
+                                <SelectTrigger
+                                  className="w-[140px]"
+                                  style={{
+                                    backgroundColor: "rgba(31, 41, 55, 0.8)",
+                                    borderColor: statusColors[referral.status as keyof typeof statusColors] || '#6B7280',
+                                    borderWidth: "1.5px"
+                                  }}
                                 >
-                                  <div className="flex items-center gap-2">
-                                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: statusColors['Indicação'] }}></span>
-                                    Indicação
-                                  </div>
-                                </SelectItem>
-                                <SelectItem
-                                  value="Contato comercial"
-                                  className="hover:bg-gray-600 text-white"
-                                  disabled={referral.status === 'Contato comercial'}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: statusColors['Contato comercial'] }}></span>
-                                    Contato comercial
-                                  </div>
-                                </SelectItem>
-                                <SelectItem
-                                  value="Em negociação"
-                                  className="hover:bg-gray-600 text-white"
-                                  disabled={referral.status === 'Em negociação'}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: statusColors['Em negociação'] }}></span>
-                                    Em negociação
-                                  </div>
-                                </SelectItem>
-                                <SelectItem
-                                  value="Sem Interesse ou Reprovado"
-                                  className="hover:bg-gray-600 text-white"
-                                  disabled={referral.status === 'Sem Interesse ou Reprovado'}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: statusColors['Sem Interesse ou Reprovado'] }}></span>
-                                    Sem Interesse ou Reprovado
-                                  </div>
-                                </SelectItem>
-                                <SelectItem
-                                  value="Aprovado"
-                                  className="hover:bg-gray-600 text-white"
-                                  disabled={referral.status === 'Aprovado'}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: statusColors['Aprovado'] }}></span>
-                                    Aprovado
-                                  </div>
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
+                                  <SelectValue placeholder="Alterar status" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-gray-700 border-gray-600">
+                                  <SelectItem
+                                    value="Indicação"
+                                    className="hover:bg-gray-600 text-white"
+                                    disabled={referral.status === 'Indicação'}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: statusColors['Indicação'] }}></span>
+                                      Indicação
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem
+                                    value="Contato comercial"
+                                    className="hover:bg-gray-600 text-white"
+                                    disabled={referral.status === 'Contato comercial'}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: statusColors['Contato comercial'] }}></span>
+                                      Contato comercial
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem
+                                    value="Em negociação"
+                                    className="hover:bg-gray-600 text-white"
+                                    disabled={referral.status === 'Em negociação'}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: statusColors['Em negociação'] }}></span>
+                                      Em negociação
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem
+                                    value="Sem Interesse ou Reprovado"
+                                    className="hover:bg-gray-600 text-white"
+                                    disabled={referral.status === 'Sem Interesse ou Reprovado'}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: statusColors['Sem Interesse ou Reprovado'] }}></span>
+                                      Sem Interesse ou Reprovado
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem
+                                    value="Aprovado"
+                                    className="hover:bg-gray-600 text-white"
+                                    disabled={referral.status === 'Aprovado'}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: statusColors['Aprovado'] }}></span>
+                                      Aprovado
+                                    </div>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-8 text-center text-gray-400">
+                          Nenhuma indicação encontrada com os filtros selecionados.
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-8 text-center text-gray-400">
-                        Nenhuma indicação encontrada com os filtros selecionados.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
             </div>
+
           </CardContent>
         </Card>
 
