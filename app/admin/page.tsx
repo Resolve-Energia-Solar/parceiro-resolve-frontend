@@ -17,8 +17,6 @@ import {
   PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
 import { LucideIcon } from 'lucide-react';
-import { Tooltip as CustomTooltip } from '@/components/ui/Tooltip';
-
 interface Referral {
   id: string;
   referrer_id: string;
@@ -29,6 +27,8 @@ interface Referral {
   referrer: {
     name: string;
     email: string;
+    cpf: string;
+    telefone: string;
     unit_id: string;
     unit: {
       id: string;
@@ -277,7 +277,7 @@ export default function AdminPage() {
           .from('referrals')
           .select(`
             *, 
-            referrer:users!referrer_id (name, email, unit_id, unit:units(id, name)),
+            referrer:users!referrer_id (name, email, telefone, cpf, unit_id, unit:units(id, name)),
             referred_user:users!referred_user_id (name, email, cpf, telefone, unit_id, unit:units(id, name))
           `)
           .order('created_at', { ascending: false });
@@ -725,19 +725,16 @@ export default function AdminPage() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm font-medium text-gray-100">{referral.referrer?.name || "—"}</div>
                             <div className="text-sm text-gray-400">{referral.referrer?.email || "—"}</div>
+                            <div className="text-sm text-gray-400">{formatPhoneNumber(referral.referrer?.telefone) || "—"}</div>
+                            <div className="text-sm text-gray-400">{formatCPF(referral.referrer?.cpf) || "—"}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <CustomTooltip content={
-                              <div className="flex flex-col gap-1">
-                                <p><strong>Telefone:</strong> {formatPhoneNumber(referral.referred_user?.telefone) || "—"}</p>
-                                <p><strong>CPF:</strong> {formatCPF(referral.referred_user?.cpf) || "—"}</p>
-                              </div>
-                            }>
-                              <div className="cursor-help">
-                                <div className="text-sm font-medium text-gray-100">{referral.referred_user?.name || "—"}</div>
-                                <div className="text-sm text-gray-400">{referral.referred_user?.email || "—"}</div>
-                              </div>
-                            </CustomTooltip>
+                            <div className="">
+                              <div className="text-sm font-medium text-gray-100">{referral.referred_user?.name || "—"}</div>
+                              <div className="text-sm text-gray-400">{referral.referred_user?.email || "—"}</div>
+                              <div className="text-sm text-gray-400">{formatPhoneNumber(referral.referred_user?.telefone) || "—"}</div>
+                              <div className="text-sm text-gray-400"> {formatCPF(referral.referred_user?.cpf) || "—"}</div>
+                            </div>
                           </td>
 
                           <td className="px-6 py-4 whitespace-nowrap">
