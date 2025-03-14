@@ -10,7 +10,7 @@ const formatBirthDate = (birthDate: string) => {
         throw new Error("Data inválida");
       }
       return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-    } 
+    }
     else {
       const date = new Date(birthDate);
       if (isNaN(date.getTime())) {
@@ -37,7 +37,7 @@ const formatBirthDateForDB = (birthDate: string): string => {
   } catch (error) {
     console.error('Erro ao formatar data:', error);
   }
-  
+
   return birthDate;
 };
 
@@ -188,9 +188,9 @@ async function signUp({
 export async function signInWithCpfAndBirthDate(cpf: string, birthDate: string) {
   try {
     const formattedCpf = formatCpf(cpf);
-    
+
     let formattedBirthDate = formatBirthDateForDB(birthDate);
-    
+
     console.log('Tentando login com:', { cpf: formattedCpf, birthDate: formattedBirthDate });
 
     const { data: user, error } = await supabase
@@ -208,7 +208,7 @@ export async function signInWithCpfAndBirthDate(cpf: string, birthDate: string) 
 
     const inputDate = new Date(birthDate.replace(/(\d+)\/(\d+)\/(\d+)/, '$3-$2-$1'));
     const dbDate = new Date(user.birthdate);
-    
+
     if (inputDate.getTime() !== dbDate.getTime()) {
       console.error('Data de nascimento não corresponde:', {
         input: inputDate,
@@ -220,16 +220,16 @@ export async function signInWithCpfAndBirthDate(cpf: string, birthDate: string) 
     console.log('Tentando autenticar com email:', user.email);
 
     const possiblePasswords = [
-      birthDate,                                           
-      user.birthdate,                                       
-      inputDate.toISOString().split('T')[0],               
-      `${inputDate.getDate()}/${inputDate.getMonth()+1}/${inputDate.getFullYear()}`, 
-      `${inputDate.getDate().toString().padStart(2, '0')}/${(inputDate.getMonth()+1).toString().padStart(2, '0')}/${inputDate.getFullYear()}`, // DD/MM/YYYY padded
+      birthDate,
+      user.birthdate,
+      inputDate.toISOString().split('T')[0],
+      `${inputDate.getDate()}/${inputDate.getMonth() + 1}/${inputDate.getFullYear()}`,
+      `${inputDate.getDate().toString().padStart(2, '0')}/${(inputDate.getMonth() + 1).toString().padStart(2, '0')}/${inputDate.getFullYear()}`, // DD/MM/YYYY padded
     ];
-    
+
     let authData;
     let lastError;
-    
+
     for (const password of possiblePasswords) {
       try {
         console.log(`Tentando senha: ${password}`);
@@ -237,26 +237,26 @@ export async function signInWithCpfAndBirthDate(cpf: string, birthDate: string) 
           email: user.email,
           password: password,
         });
-        
+
         if (!signInError && data.user) {
           authData = data;
-          break; 
+          break;
         }
-        
+
         lastError = signInError;
       } catch (e) {
         lastError = e;
       }
     }
-    
+
     if (!authData) {
       console.error('Todos os formatos de senha falharam:', lastError);
-      
+
       const { error: updateError } = await supabase.auth.updateUser({
         email: user.email,
         password: user.birthdate
       });
-      
+
       if (updateError) {
         console.error('Erro ao redefinir senha:', updateError);
         throw new Error("Falha na autenticação. Entre em contato com o suporte.");
@@ -265,11 +265,11 @@ export async function signInWithCpfAndBirthDate(cpf: string, birthDate: string) 
         email: user.email,
         password: user.birthdate,
       });
-      
+
       if (newSignInError) {
         throw new Error("Falha na autenticação após redefinir senha. Verifique suas credenciais.");
       }
-      
+
       authData = newData;
     }
 
@@ -289,15 +289,15 @@ export async function signInWithCpfAndBirthDate(cpf: string, birthDate: string) 
 export async function signOut() {
   try {
     const { error } = await supabase.auth.signOut();
-    
+
     localStorage.removeItem('sb-access-token');
     localStorage.removeItem('sb-refresh-token');
     localStorage.removeItem('user');
-    
+
     sessionStorage.removeItem('sb-access-token');
     sessionStorage.removeItem('sb-refresh-token');
     sessionStorage.removeItem('user');
-    
+
     document.cookie.split(";").forEach((c) => {
       document.cookie = c
         .replace(/^ +/, "")
@@ -324,7 +324,7 @@ export async function getCurrentUser() {
       .select('*')
       .eq('id', user.id)
       .single();
-    
+
     if (userError) throw new Error("Erro ao buscar dados do usuário");
 
     return { ...user, ...userData };
@@ -416,12 +416,12 @@ async function logUserActivity(userId: string, action: string, details: string) 
       .from('users_log')
       .select('id')
       .limit(1);
-    
+
     if (checkError && checkError.code === '42P01') {
       console.warn('Tabela users_log não existe. Ignorando o registro de atividade.');
       return;
     }
-    
+
     const { error } = await supabase
       .from('users_log')
       .insert({
@@ -448,7 +448,7 @@ export async function getUnits() {
   const { data, error } = await supabase
     .from('units')
     .select('id, name');
-  
+
   if (error) throw new Error('Erro ao buscar unidades');
   return data;
 }

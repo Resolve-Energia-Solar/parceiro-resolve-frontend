@@ -17,6 +17,7 @@ import * as z from "zod";
 const formSchema = z.object({
   name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
   email: z.string().email("Email inválido"),
+  cpf: z.string().min(11, "CPF inválido").max(11, "CPF inválido"),
   birthdate: z.string().refine((date) => {
     const today = new Date();
     const birthDate = new Date(date);
@@ -28,7 +29,6 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-// Variantes de animação
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: { 
@@ -82,6 +82,8 @@ export default function FormsPage() {
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [isHovering, setIsHovering] = useState(false);
   const [referrerName, setReferrerName] = useState<string | null>(null);
+  const [referrerId, setReferrerId] = useState<string | null>(null);
+  const [referrerUnitId, setReferrerUnitId] = useState<string | null>(null);
 
   const {
     register,
@@ -93,75 +95,130 @@ export default function FormsPage() {
   });
 
   useEffect(() => {
-    async function fetchReferrerName() {
+    async function checkReferralsTable() {
+      try {
+        const { data: tableInfo, error: tableError } = await supabase
+          .from('referrals')
+          .select('*')
+          .limit(1);
+
+        if (tableError) {
+          console.error("Erro ao verificar tabela referrals:", tableError);
+        } else {
+          console.log("Estrutura da tabela referrals:", tableInfo);
+        }
+      } catch (error) {
+        console.error("Erro ao verificar tabela:", error);
+      }
+    }
+    
+    checkReferralsTable();
+  }, []);
+
+  useEffect(() => {
+    async function fetchReferrerInfo() {
       if (referralCode) {
         const { data, error } = await supabase
           .from("users")
-          .select("name")
+          .select("id, name, unit_id")
           .eq("referral_code", referralCode)
           .single();
 
         if (!error && data) {
           setReferrerName(data.name);
+          setReferrerId(data.id);
+          setReferrerUnitId(data.unit_id);
+          console.log("Referrer encontrado:", data);
+        } else {
+          console.error("Erro ao buscar referência:", error);
         }
       }
     }
 
-    fetchReferrerName();
+    fetchReferrerInfo();
   }, [referralCode]);
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
-      let referenceId = null;
-      if (referralCode) {
-        const { data: referrerData, error: referrerError } = await supabase
-          .from("users")
-          .select("id, referral_count")
-          .eq("referral_code", referralCode)
-          .single();
-
-        if (!referrerError && referrerData) {
-          referenceId = referrerData.id;
-          
-          await supabase
-            .from("users")
-            .update({ referral_count: (referrerData.referral_count || 0) + 1 })
-            .eq("id", referenceId);
-        }
+      if (referralCode && !referrerId) {
+        console.warn("Código de referência fornecido, mas referrerId não foi encontrado");
       }
 
       const now = new Date().toISOString();
+      
       const { data: newUser, error: userError } = await supabase
         .from("users")
         .insert([{
           ...data,
-          reference_id: referenceId,
+          reference_id: referrerId || null,
           created_at: now,
           updated_at: now,
+          user_type: "Cliente", 
+          referral_code: Math.random().toString(36).substring(2, 8).toUpperCase(), 
+          referral_count: 0,
+          total_referral_earnings: 0,
+          unit_id: referrerUnitId,
         }])
         .select()
         .single();
 
-      if (userError) throw userError;
+      if (userError) {
+        console.error("Erro ao criar usuário:", userError);
+        throw new Error(`Erro ao criar usuário: ${userError.message}`);
+      }
 
-      if (newUser && referenceId) {
-        await supabase
-          .from("referrals")
-          .insert([{
-            referrer_id: referenceId,
+      console.log("Novo usuário criado:", newUser);
+
+      if (newUser && referrerId) {
+        try {
+          console.log("Tentando salvar referência com:", {
+            referrer_id: referrerId,
             referred_user_id: newUser.id,
-            status: 'pending',
-            created_at: now,
-          }]);
+            status: 'Indicação',
+            unit_id: referrerUnitId
+          });
+
+          const { data: referralData, error: referralError } = await supabase
+            .from("referrals")
+            .insert([{
+              referrer_id: referrerId,
+              referred_user_id: newUser.id,
+              status: 'Indicação', 
+              created_at: now,
+              unit_id: referrerUnitId,
+            }])
+            .select();
+
+          if (referralError) {
+            console.error("Erro ao salvar referência:", referralError);
+            throw new Error(`Erro ao salvar referência: ${referralError.message}`);
+          }
+
+          console.log("Referência salva com sucesso:", referralData);
+
+          const { error: updateError } = await supabase
+            .from("users")
+            .update({ 
+              referral_count: supabase.rpc('increment_referral_count', { user_id: referrerId }) 
+            })
+            .eq("id", referrerId);
+
+          if (updateError) {
+            console.error("Erro ao atualizar contador de referências:", updateError);
+          }
+        } catch (referralSaveError) {
+          console.error("Falha ao salvar na tabela de referências:", referralSaveError);
+          toast.warning("Seu cadastro foi salvo, mas houve um problema com a referência");
+        }
       }
 
       setSuccess(true);
       toast.success("Cadastro realizado com sucesso!");
       reset();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao enviar formulário:", error);
-      toast.error("Erro ao enviar formulário");
+      toast.error(`Erro ao enviar formulário: ${error.message || "Tente novamente mais tarde"}`);
     } finally {
       setLoading(false);
     }
