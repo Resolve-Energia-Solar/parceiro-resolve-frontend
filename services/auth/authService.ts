@@ -48,6 +48,7 @@ export async function signUpAsPartner({
   birthDate,
   telefone,
   unit,
+  isResolveCustomer = false,
 }: {
   name: string;
   email: string;
@@ -56,6 +57,7 @@ export async function signUpAsPartner({
   unit: string;
   telefone: string;
   isSuperAdmin?: boolean;
+  isResolveCustomer?: boolean;
 }) {
   return signUp({
     name,
@@ -64,9 +66,11 @@ export async function signUpAsPartner({
     birthDate,
     telefone,
     unit,
-    userType: 'Parceiro'
+    userType: 'Parceiro',
+    isResolveCustomer,
   });
 }
+
 
 export async function signUpAsClient({
   name,
@@ -103,7 +107,9 @@ async function signUp({
   telefone,
   unit,
   userType,
-  statusIndication
+  statusIndication,
+  isResolveCustomer = false,
+
 }: {
   name: string;
   email: string;
@@ -113,6 +119,8 @@ async function signUp({
   unit: string;
   userType: 'Parceiro' | 'Cliente' | 'Admin';
   statusIndication?: 'Lead' | 'Negociação' | 'Venda';
+  isResolveCustomer?: boolean;
+
 }) {
   try {
     const formattedCpf = formatCpf(cpf);
@@ -149,6 +157,8 @@ async function signUp({
       user_type: 'Parceiro' | 'Cliente' | 'Admin';
       unit_id: string;
       status_indication?: 'Lead' | 'Negociação' | 'Venda';
+      is_resolve_customer: boolean;
+
     } = {
       id: authData.user.id,
       name,
@@ -160,7 +170,9 @@ async function signUp({
       referral_count: 0,
       total_referral_earnings: 0,
       user_type: userType,
-      unit_id: unit
+      unit_id: unit,
+      is_resolve_customer: isResolveCustomer,
+
     };
 
     if (statusIndication) {
