@@ -7,6 +7,8 @@ interface RankingUser {
   referral_count: number;
   approved_referrals: number;
   user_type: string;
+  is_resolve_customer: boolean;
+
 }
 
 export function useRanking() {
@@ -19,7 +21,7 @@ export function useRanking() {
       try {
         const { data, error } = await supabase
           .from('users')
-          .select('id, name, referral_count, approved_referrals, user_type')
+          .select('id, name, referral_count, approved_referrals, user_type, is_resolve_customer')
           .in('user_type', ['Parceiro', 'Admin', 'SDR', 'Super admin'])
           .order('approved_referrals', { ascending: false });
 

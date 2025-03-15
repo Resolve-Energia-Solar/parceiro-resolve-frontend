@@ -8,6 +8,7 @@ export interface User {
     created_at: string;
     updated_at: string;
     is_admin: boolean;
+    is_resolve_customer: boolean;
   }
   
   export interface RankingUser {
