@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import { Users, Clock, Ban, CheckCircle, Copy, Share2, UserPlus, PhoneCall } from "lucide-react";
+import { Users, Clock, Ban, CheckCircle, Copy, Share2, UserPlus, PhoneCall, Check } from "lucide-react";
 import { StatsCard } from "../../components/dashboard/StatsCard";
 import { useDashboardData, formatStatus } from "../../hooks/useDashboardData";
 import { Loader2 } from "lucide-react";
@@ -17,12 +17,22 @@ import { supabase } from "@/lib/supabase";
 
 export default function Dashboard() {
   const router = useRouter();
-  const { data, loading } = useDashboardData();
+  const { data, loading, error, refetch, updateWithNewReferral } = useDashboardData();
   const [mounted, setMounted] = useState(false);
   const [referralLink, setReferralLink] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+  const [inputHighlighted, setInputHighlighted] = useState(false);
+  const [newReferral, setNewReferral] = useState<any>(null);
+  const [recentReferrals, setRecentReferrals] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (data?.recentReferrals) {
+      setRecentReferrals(data.recentReferrals);
+    }
+  }, [data?.recentReferrals]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -83,7 +93,7 @@ export default function Dashboard() {
           router.push("/");
           return;
         }
-        
+
       } catch (error) {
         console.error("Erro ao verificar autenticação:", error);
         toast.error("Ocorreu um erro ao verificar suas permissões");
@@ -106,6 +116,15 @@ export default function Dashboard() {
     navigator.clipboard.writeText(referralLink)
       .then(() => {
         toast.success("Link copiado com sucesso!");
+
+        setIsCopied(true);
+
+        setInputHighlighted(true);
+
+        setTimeout(() => {
+          setIsCopied(false);
+          setInputHighlighted(false);
+        }, 30000);
       })
       .catch((err) => {
         toast.error("Erro ao copiar o link: " + err);
@@ -126,12 +145,44 @@ export default function Dashboard() {
     }
   };
 
+  const handleReferralSuccess = (newReferralData: any) => {
+    setIsModalOpen(false);
+    
+    if (newReferralData) {
+      setNewReferral(newReferralData);
+      
+      const formattedReferral = {
+        id: newReferralData.id,
+        name: newReferralData.name,
+        date: newReferralData.date,
+        status: newReferralData.status
+      };
+      
+      setRecentReferrals(prev => [formattedReferral, ...prev]);
+      
+      updateWithNewReferral(formattedReferral);
+      
+      refetch().catch(error => {
+        console.error("Erro ao atualizar dados do servidor:", error);
+      });
+      
+      setTimeout(() => {
+        setNewReferral(null);
+      }, 5000);
+    }
+  };
+
   if (!mounted || loading || isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-yellow-400" />
       </div>
     );
+  }
+
+  if (error) {
+    console.error("Erro ao carregar dashboard:", error);
+    toast.error("Ocorreu um erro ao carregar os dados. Tente novamente.");
   }
 
   if (!isAuthorized) {
@@ -153,16 +204,14 @@ export default function Dashboard() {
           </Button>
         </div>
 
-
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogContent className="bg-[#121212] text-white max-w-[95vw] sm:max-w-[500px] p-4 sm:p-6">
             <DialogHeader>
               <DialogTitle>Nova Indicação</DialogTitle>
             </DialogHeader>
-            <ReferralForm onSuccess={() => setIsModalOpen(false)} referralCode={data?.referralCode} />
+            <ReferralForm onSuccess={handleReferralSuccess} referralCode={data?.referralCode} />
           </DialogContent>
         </Dialog>
-
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8 mb-6 md:mb-8">
           <div className="lg:col-span-2 space-y-4 md:space-y-6">
@@ -199,9 +248,20 @@ export default function Dashboard() {
               />
             </div>
 
-
             <div className="bg-[#121212] rounded-lg p-3 sm:p-4 md:p-6">
               <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">Status das Indicações</h3>
+              
+              {newReferral && (
+                <div className="mb-4 p-3 bg-green-900/20 border border-green-500/50 rounded-lg animate-pulse">
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
+                    <p className="text-green-400">
+                      Indicação de <span className="font-semibold">{newReferral.name}</span> criada com sucesso!
+                    </p>
+                  </div>
+                </div>
+              )}
+              
               <div className="overflow-x-auto -mx-3 sm:mx-0">
                 <Table className="min-w-full">
                   <TableHeader>
@@ -212,25 +272,47 @@ export default function Dashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {data.recentReferrals?.map((referral) => (
-                      <TableRow key={referral.id}>
-                        <TableCell className="whitespace-nowrap">{referral.name}</TableCell>
-                        <TableCell className="whitespace-nowrap">{new Date(referral.date).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <span
-                            className={`px-2 py-1 inline-block text-center rounded-full text-xs ${referral.status === 'Indicação' ? 'bg-blue-500 text-white' :
-                              referral.status === 'Contato comercial' ? 'bg-yellow-500 text-black' :
-                                referral.status === 'Em negociação' ? 'bg-purple-500 text-white' :
-                                  referral.status === 'Sem Interesse ou Reprovado' ? 'bg-red-500 text-white' :
-                                    referral.status === 'Aprovado' ? 'bg-green-500 text-white' :
-                                      'bg-gray-500 text-white'
-                              }`}
-                          >
-                            {formatStatus(referral.status)}
-                          </span>
+                    {recentReferrals.length > 0 ? (
+                      recentReferrals.map((referral) => (
+                        <TableRow 
+                          key={referral.id}
+                          className={referral.id === newReferral?.id 
+                            ? "bg-green-900/30 animate-pulse" 
+                            : ""
+                          }
+                        >
+                          <TableCell className="whitespace-nowrap">
+                            {referral.id === newReferral?.id && (
+                              <span className="inline-block mr-2 w-2 h-2 rounded-full bg-green-500 animate-ping"></span>
+                            )}
+                            {referral.name}
+                            {referral.id === newReferral?.id && (
+                              <span className="ml-2 text-xs text-green-400 font-medium">Nova</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap">{new Date(referral.date).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            <span
+                              className={`px-2 py-1 inline-block text-center rounded-full text-xs ${referral.status === 'Indicação' ? 'bg-blue-500 text-white' :
+                                referral.status === 'Contato comercial' ? 'bg-yellow-500 text-black' :
+                                  referral.status === 'Em negociação' ? 'bg-purple-500 text-white' :
+                                    referral.status === 'Sem Interesse ou Reprovado' ? 'bg-red-500 text-white' :
+                                      referral.status === 'Aprovado' ? 'bg-green-500 text-white' :
+                                        'bg-gray-500 text-white'
+                                }`}
+                            >
+                              {formatStatus(referral.status)}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center py-6 text-gray-500">
+                          Nenhuma indicação encontrada
                         </TableCell>
                       </TableRow>
-                    ))}
+                    )}
                   </TableBody>
                 </Table>
               </div>
@@ -241,16 +323,28 @@ export default function Dashboard() {
               <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">Seu Link de Indicação</h3>
               <div className="flex flex-col sm:flex-row gap-2">
                 <input
-                  className="w-full p-2 rounded-lg bg-gray-800 text-gray-300 text-sm md:text-base"
+                  className={`w-full p-2 rounded-lg ${inputHighlighted
+                    ? 'bg-green-900/30 text-white border border-green-500 transition-all duration-300'
+                    : 'bg-gray-800 text-gray-300'} text-sm md:text-base`}
                   value={referralLink}
                   readOnly
                 />
                 <div className="flex gap-2 mt-2 sm:mt-0">
                   <Button
-                    className="flex-1 sm:flex-none bg-yellow-500 p-2 rounded-lg hover:bg-yellow-600 transition-colors"
+                    className={`flex-1 sm:flex-none ${isCopied
+                        ? 'bg-green-600 hover:bg-green-700'
+                        : 'bg-yellow-500 hover:bg-yellow-600'
+                      } p-2 rounded-lg transition-all duration-300`}
                     onClick={copyToClipboard}
                   >
-                    <Copy className="w-4 h-4 sm:w-5 sm:h-5" />
+                    {isCopied ? (
+                      <div className="flex items-center">
+                        <Check className="w-4 h-4 sm:w-5 sm:h-5 mr-1" />
+                        <span className="text-xs">Copiado!</span>
+                      </div>
+                    ) : (
+                      <Copy className="w-4 h-4 sm:w-5 sm:h-5" />
+                    )}
                   </Button>
                   <Button
                     className="flex-1 sm:flex-none bg-gray-700 p-2 rounded-lg hover:bg-gray-600 transition-colors"
@@ -260,13 +354,18 @@ export default function Dashboard() {
                   </Button>
                 </div>
               </div>
+              {isCopied && (
+                <div className="mt-2 text-green-400 text-sm flex items-center animate-pulse">
+                  <Check className="w-4 h-4 mr-1" />
+                  Link copiado para a área de transferência!
+                </div>
+              )}
             </div>
             <div className="bg-[#121212] rounded-lg p-3 sm:p-4 md:p-6">
               <RankingList />
             </div>
           </div>
         </div>
-
 
         <div className="bg-[#121212] rounded-lg p-3 sm:p-4 md:p-6">
           <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">Informações sobre Status</h3>
