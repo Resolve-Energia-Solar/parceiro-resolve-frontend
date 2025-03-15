@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sun, CheckCircle, Sparkles } from "lucide-react";
+import { Sun, CheckCircle, Sparkles, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -13,18 +13,13 @@ import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import InputMask from 'react-input-mask';
 
 const formSchema = z.object({
   name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
   email: z.string().email("Email inválido"),
-  cpf: z.string().min(11, "CPF inválido").max(11, "CPF inválido"),
-  birthdate: z.string().refine((date) => {
-    const today = new Date();
-    const birthDate = new Date(date);
-    const age = today.getFullYear() - birthDate.getFullYear();
-    return age >= 18;
-  }, "Você deve ter pelo menos 18 anos"),
-  telefone: z.string().regex(/^\d{10,11}$/, "Telefone deve ter entre 10 e 11 dígitos"),
+  telefone: z.string().min(14, "Telefone inválido"),
+  energy_bill: z.string().min(1, "Informe o valor da sua conta de energia"),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -78,6 +73,8 @@ export default function FormsPage() {
   const searchParams = useSearchParams();
   const referralCode = searchParams.get('ref');
   const [loading, setLoading] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const [emailExists, setEmailExists] = useState(false);
   const [success, setSuccess] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [isHovering, setIsHovering] = useState(false);
@@ -89,31 +86,41 @@ export default function FormsPage() {
     register,
     handleSubmit,
     formState: { errors },
-    reset
+    reset,
+    watch,
+    trigger
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
   });
 
+  const emailValue = watch('email');
+  
   useEffect(() => {
-    async function checkReferralsTable() {
-      try {
-        const { data: tableInfo, error: tableError } = await supabase
-          .from('referrals')
-          .select('*')
-          .limit(1);
-
-        if (tableError) {
-          console.error("Erro ao verificar tabela referrals:", tableError);
-        } else {
-          console.log("Estrutura da tabela referrals:", tableInfo);
+    const timer = setTimeout(async () => {
+      if (emailValue && emailValue.includes('@')) {
+        setCheckingEmail(true);
+        try {
+          const { data, error, count } = await supabase
+            .from("users")
+            .select("email", { count: 'exact' })
+            .eq("email", emailValue.trim().toLowerCase())
+            .limit(1);
+            
+          if (count && count > 0) {
+            setEmailExists(true);
+          } else {
+            setEmailExists(false);
+          }
+        } catch (error) {
+          console.error("Erro ao verificar email:", error);
+        } finally {
+          setCheckingEmail(false);
         }
-      } catch (error) {
-        console.error("Erro ao verificar tabela:", error);
       }
-    }
+    }, 500); 
     
-    checkReferralsTable();
-  }, []);
+    return () => clearTimeout(timer);
+  }, [emailValue]);
 
   useEffect(() => {
     async function fetchReferrerInfo() {
@@ -140,45 +147,59 @@ export default function FormsPage() {
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
+    
     try {
+      const { count } = await supabase
+        .from("users")
+        .select("*", { count: 'exact' })
+        .eq("email", data.email.trim().toLowerCase())
+        .limit(1);
+        
+      if (count && count > 0) {
+        toast.error("Este email já está cadastrado no sistema.");
+        setEmailExists(true);
+        setLoading(false);
+        return;
+      }
+      
       if (referralCode && !referrerId) {
         console.warn("Código de referência fornecido, mas referrerId não foi encontrado");
       }
-
+  
+      const cleanTelefone = data.telefone.replace(/\D/g, '');
+  
       const now = new Date().toISOString();
       
+      const userData = {
+        name: data.name,
+        email: data.email.trim().toLowerCase(), 
+        telefone: cleanTelefone,
+        energy_bill: `Valor da conta de energia: R$ ${data.energy_bill}`,
+        reference_id: referrerId || null,
+        created_at: now,
+        updated_at: now,
+        user_type: "Cliente", 
+        referral_code: Math.random().toString(36).substring(2, 8).toUpperCase(), 
+        referral_count: 0,
+        total_referral_earnings: 0,
+        unit_id: referrerUnitId,
+      };
+  
       const { data: newUser, error: userError } = await supabase
         .from("users")
-        .insert([{
-          ...data,
-          reference_id: referrerId || null,
-          created_at: now,
-          updated_at: now,
-          user_type: "Cliente", 
-          referral_code: Math.random().toString(36).substring(2, 8).toUpperCase(), 
-          referral_count: 0,
-          total_referral_earnings: 0,
-          unit_id: referrerUnitId,
-        }])
+        .insert([userData])
         .select()
         .single();
-
+  
       if (userError) {
         console.error("Erro ao criar usuário:", userError);
         throw new Error(`Erro ao criar usuário: ${userError.message}`);
       }
-
+  
       console.log("Novo usuário criado:", newUser);
-
+  
       if (newUser && referrerId) {
         try {
-          console.log("Tentando salvar referência com:", {
-            referrer_id: referrerId,
-            referred_user_id: newUser.id,
-            status: 'Indicação',
-            unit_id: referrerUnitId
-          });
-
           const { data: referralData, error: referralError } = await supabase
             .from("referrals")
             .insert([{
@@ -189,30 +210,41 @@ export default function FormsPage() {
               unit_id: referrerUnitId,
             }])
             .select();
-
+  
           if (referralError) {
             console.error("Erro ao salvar referência:", referralError);
             throw new Error(`Erro ao salvar referência: ${referralError.message}`);
           }
-
+  
           console.log("Referência salva com sucesso:", referralData);
-
-          const { error: updateError } = await supabase
+  
+          // CORREÇÃO: Atualizar o contador de referências corretamente
+          // Opção 1: Obter o contador atual e incrementar
+          const { data: userData } = await supabase
             .from("users")
-            .update({ 
-              referral_count: supabase.rpc('increment_referral_count', { user_id: referrerId }) 
-            })
-            .eq("id", referrerId);
-
-          if (updateError) {
-            console.error("Erro ao atualizar contador de referências:", updateError);
+            .select("referral_count")
+            .eq("id", referrerId)
+            .single();
+  
+          if (userData) {
+            const newCount = (userData.referral_count || 0) + 1;
+            
+            const { error: updateError } = await supabase
+              .from("users")
+              .update({ referral_count: newCount })
+              .eq("id", referrerId);
+              
+            if (updateError) {
+              console.error("Erro ao atualizar contador de referências:", updateError);
+            }
           }
+  
         } catch (referralSaveError) {
           console.error("Falha ao salvar na tabela de referências:", referralSaveError);
           toast.warning("Seu cadastro foi salvo, mas houve um problema com a referência");
         }
       }
-
+  
       setSuccess(true);
       toast.success("Cadastro realizado com sucesso!");
       reset();
@@ -223,14 +255,7 @@ export default function FormsPage() {
       setLoading(false);
     }
   };
-
-  const formFields = [
-    { name: "name", placeholder: "Nome completo", type: "text" },
-    { name: "email", placeholder: "Email", type: "email" },
-    { name: "cpf", placeholder: "CPF (apenas números)", type: "text" },
-    { name: "birthdate", placeholder: "Data de Nascimento", type: "date" },
-    { name: "telefone", placeholder: "Telefone (apenas números)", type: "text" }
-  ];
+  
 
   return (
     <div className="min-h-screen bg-black py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
@@ -303,41 +328,149 @@ export default function FormsPage() {
 
                   <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                     <motion.div variants={containerVariants}>
-                      {formFields.map((field, index) => (
+                      <motion.div variants={itemVariants} className="mb-4">
                         <motion.div
-                          key={field.name}
-                          variants={itemVariants}
-                          className="mb-4"
+                          whileHover={{ scale: 1.02 }}
+                          whileFocus={{ scale: 1.02 }}
+                          className="relative"
                         >
-                          <motion.div
-                            whileHover={{ scale: 1.02 }}
-                            whileFocus={{ scale: 1.02 }}
-                            className="relative"
-                          >
+                          <Input
+                            {...register("name")}
+                            type="text"
+                            placeholder="Nome completo"
+                            className={`
+                              bg-gray-800 border-yellow-500/20 text-white 
+                              placeholder:text-gray-400 transition-all
+                              ${focusedField === "name" ? 'border-yellow-500' : ''}
+                            `}
+                            onFocus={() => setFocusedField("name")}
+                            onBlur={() => setFocusedField(null)}
+                          />
+                          {errors.name && (
+                            <motion.span
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="text-red-500 text-sm mt-1 block"
+                            >
+                              {errors.name.message}
+                            </motion.span>
+                          )}
+                        </motion.div>
+                      </motion.div>
+
+                      <motion.div variants={itemVariants} className="mb-4">
+                        <motion.div
+                          whileHover={{ scale: 1.02 }}
+                          whileFocus={{ scale: 1.02 }}
+                          className="relative"
+                        >
+                          <div className="relative">
                             <Input
-                              {...register(field.name as keyof FormData)}
-                              type={field.type}
-                              placeholder={field.placeholder}
+                              {...register("email")}
+                              type="email"
+                              placeholder="Email"
                               className={`
                                 bg-gray-800 border-yellow-500/20 text-white 
                                 placeholder:text-gray-400 transition-all
-                                ${focusedField === field.name ? 'border-yellow-500' : ''}
+                                ${focusedField === "email" ? 'border-yellow-500' : ''}
+                                ${emailExists ? 'border-red-500' : ''}
                               `}
-                              onFocus={() => setFocusedField(field.name)}
-                              onBlur={() => setFocusedField(null)}
+                              onFocus={() => setFocusedField("email")}
+                              onBlur={() => {
+                                setFocusedField(null);
+                                trigger("email"); 
+                              }}
                             />
-                            {errors[field.name as keyof FormData] && (
-                              <motion.span
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="text-red-500 text-sm mt-1 block"
-                              >
-                                {errors[field.name as keyof FormData]?.message}
-                              </motion.span>
+                            {checkingEmail && (
+                              <span className="absolute right-3 top-2.5 text-gray-400 text-sm">
+                                Verificando...
+                              </span>
                             )}
-                          </motion.div>
+                          </div>
+                          
+                          {emailExists && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="flex items-center text-red-500 text-sm mt-1"
+                            >
+                              <AlertCircle className="w-4 h-4 mr-1" />
+                              Este email já está cadastrado
+                            </motion.div>
+                          )}
+                          
+                          {errors.email && !emailExists && (
+                            <motion.span
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="text-red-500 text-sm mt-1 block"
+                            >
+                              {errors.email.message}
+                            </motion.span>
+                          )}
                         </motion.div>
-                      ))}
+                      </motion.div>
+
+                      <motion.div variants={itemVariants} className="mb-4">
+                        <motion.div
+                          whileHover={{ scale: 1.02 }}
+                          whileFocus={{ scale: 1.02 }}
+                          className="relative"
+                        >
+                          <InputMask
+                            mask="(99) 99999-9999"
+                            maskChar=""
+                            {...register("telefone")}
+                            placeholder="Telefone"
+                            className={`
+                              w-full bg-gray-800 border border-yellow-500/20 text-white 
+                              placeholder:text-gray-400 transition-all rounded-md p-2
+                              ${focusedField === "telefone" ? 'border-yellow-500' : ''}
+                            `}
+                            onFocus={() => setFocusedField("telefone")}
+                            onBlur={() => setFocusedField(null)}
+                          />
+                          {errors.telefone && (
+                            <motion.span
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="text-red-500 text-sm mt-1 block"
+                            >
+                              {errors.telefone.message}
+                            </motion.span>
+                          )}
+                        </motion.div>
+                      </motion.div>
+
+                      <motion.div variants={itemVariants} className="mb-4">
+                        <motion.div
+                          whileHover={{ scale: 1.02 }}
+                          whileFocus={{ scale: 1.02 }}
+                          className="relative"
+                        >
+                          <Input
+                            {...register("energy_bill")}
+                            type="number"
+                            placeholder="Quanto você paga de energia (R$)"
+                            className={`
+                              bg-gray-800 border-yellow-500/20 text-white 
+                              placeholder:text-gray-400 transition-all
+                              ${focusedField === "energy_bill" ? 'border-yellow-500' : ''}
+                            `}
+                            onFocus={() => setFocusedField("energy_bill")}
+                            onBlur={() => setFocusedField(null)}
+                          />
+                          {errors.energy_bill && (
+                            <motion.span
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="text-red-500 text-sm mt-1 block"
+                            >
+                              {errors.energy_bill.message}
+                            </motion.span>
+                          )}
+                        </motion.div>
+                      </motion.div>
                     </motion.div>
 
                     <motion.div
@@ -348,7 +481,7 @@ export default function FormsPage() {
                       <Button
                         type="submit"
                         className="w-full bg-yellow-500 text-black hover:bg-yellow-600 transition-all"
-                        disabled={loading}
+                        disabled={loading || emailExists}
                       >
                         <motion.div
                           className="flex items-center justify-center"
