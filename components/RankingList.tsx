@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Trophy, Medal, Users, Award, UserCheck } from "lucide-react";
+import { Trophy, Medal, Users, Award, UserCheck, Info } from "lucide-react";
 import { useUser } from "@/hooks/useUser";
-import { supabase } from "@/lib/supabase";
+
 
 const getPositionIcon = (position: number) => {
   switch (position) {
@@ -19,12 +19,37 @@ const getPositionIcon = (position: number) => {
   }
 };
 
+
+const mockClients = [
+  { id: 'client-1', name: 'Maria Silva', referrals: 42, position: 1 },
+  { id: 'client-2', name: 'João Oliveira', referrals: 38, position: 2 },
+  { id: 'client-3', name: 'Ana Santos', referrals: 29, position: 3 },
+  { id: 'client-4', name: 'Carlos Mendes', referrals: 23, position: 4 }
+];
+
+
+const mockPartners = [
+  { id: 'partner-1', name: 'Giovanne Souza', referrals: 56, position: 1 },
+  { id: 'partner-2', name: 'Luigi Profeti', referrals: 48, position: 2 },
+  { id: 'partner-3', name: 'Erick Silva', referrals: 37, position: 3 },
+  { id: 'partner-4', name: 'Andreina Santos', referrals: 29, position: 4 }
+];
+
+
 export function RankingList() {
   const { user } = useUser();
   const [loading, setLoading] = useState(true);
-  const [clientParticipants, setClientParticipants] = useState<any[]>([]);
-  const [partnerParticipants, setPartnerParticipants] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'clients' | 'partners'>('clients');
+
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1500);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
 
   useEffect(() => {
     if (user?.is_resolve_customer) {
@@ -34,60 +59,14 @@ export function RankingList() {
     }
   }, [user]);
 
-  useEffect(() => {
-    async function fetchTopParticipants() {
-      try {
-        setLoading(true);
-        
-        const { data: clientData, error: clientError } = await supabase
-          .from('users')
-          .select('id, name, approved_referrals')
-          .eq('is_resolve_customer', true)
-          .order('approved_referrals', { ascending: false })
-          .limit(4);
 
-        if (clientError) throw clientError;
-
-        const { data: partnerData, error: partnerError } = await supabase
-          .from('users')
-          .select('id, name, approved_referrals')
-          .eq('is_resolve_customer', false)
-          .order('approved_referrals', { ascending: false })
-          .limit(4);
-
-        if (partnerError) throw partnerError;
-
-        const formattedClientData = clientData.map((user, index) => ({
-          id: user.id,
-          name: user.name,
-          referrals: user.approved_referrals || 0,
-          position: index + 1
-        }));
-
-        const formattedPartnerData = partnerData.map((user, index) => ({
-          id: user.id,
-          name: user.name,
-          referrals: user.approved_referrals || 0,
-          position: index + 1
-        }));
-
-        setClientParticipants(formattedClientData);
-        setPartnerParticipants(formattedPartnerData);
-      } catch (error) {
-        console.error("Error fetching top participants:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchTopParticipants();
-  }, []);
-
-  const topParticipants = activeTab === 'clients' ? clientParticipants : partnerParticipants;
+  const topParticipants = activeTab === 'clients' ? mockClients : mockPartners;
+  
   const tabTitle = activeTab === 'clients' ? "Ranking de Clientes" : "Ranking de Parceiros";
   const subtitle = activeTab === 'clients' 
     ? "Os clientes com mais vendas convertidas"
     : "Os parceiros com mais vendas convertidas";
+
 
   if (loading) {
     return (
@@ -102,9 +81,22 @@ export function RankingList() {
     );
   }
 
+
   return (
     <div className="py-12 sm:py-16 md:py-24 bg-gradient-to-b from-black to-gray-900">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+         <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="mb-6 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg flex items-start md:items-center gap-3"
+        >
+          <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5 md:mt-0" />
+          <p className="text-sm text-blue-100">
+            <span className="font-semibold">Aviso:</span> Este ranking é meramente ilustrativo, contendo dados fictícios para demonstração. Não representa dados reais de desempenho.
+          </p>
+        </motion.div>
+        
         <div className="flex rounded-lg overflow-hidden mb-6 max-w-xs mx-auto">
           <button
             onClick={() => setActiveTab('clients')}
@@ -130,6 +122,7 @@ export function RankingList() {
           </button>
         </div>
 
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -142,7 +135,9 @@ export function RankingList() {
           <p className="text-base md:text-xl text-gray-400">
             {subtitle}
           </p>
+          <p className="text-xs text-gray-500 mt-2 italic">Dados meramente ilustrativos</p>
         </motion.div>
+
 
         <div className="mb-10 md:mb-20">
           <div className="hidden md:flex relative h-[300px] md:h-[400px] items-end justify-center gap-2 md:gap-4">
@@ -187,11 +182,13 @@ export function RankingList() {
                         </div>
                       )}
 
+
                       {index > 0 && (
                         <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm border border-gray-400/50">
                           {getPositionIcon(participant.position)}
                         </div>
                       )}
+
 
                       <motion.div
                         initial={{ scale: 0 }}
@@ -254,6 +251,7 @@ export function RankingList() {
               </motion.div>
             ))}
           </div>
+
 
           <div className="md:hidden space-y-3">
             {topParticipants.slice(0, 3).map((participant, index) => (
@@ -325,8 +323,13 @@ export function RankingList() {
             ))}
           </div>
 
-          <h1 className="text-center my-4 md:my-10 text-white text-xs md:text-sm font-semibold">Os melhores em vendas convertidas</h1>
+
+          <h1 className="text-center my-4 md:my-10 text-white text-xs md:text-sm font-semibold">
+            Os melhores em vendas convertidas 
+            <span className="ml-1 text-gray-500 italic">(Ranking meramente ilustrativo)</span>
+          </h1>
         </div>
+
 
         {topParticipants.length > 3 && (
           <motion.div
@@ -406,23 +409,12 @@ export function RankingList() {
             ))}
           </motion.div>
         )}
-
-        {topParticipants.length === 0 && (
-          <div className="text-center py-12 bg-gray-900/50 rounded-lg border border-gray-800">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              {activeTab === 'clients' ? (
-                <UserCheck className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-              ) : (
-                <Users className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-              )}
-            </motion.div>
-            <p className="text-gray-400">Nenhum participante encontrado neste ranking</p>
-          </div>
-        )}
+        
+        <div className="mt-8 border-t border-gray-800 pt-4">
+          <p className="text-center text-gray-500 text-xs">
+            * Todos os participantes e dados de desempenho apresentados neste ranking são fictícios e meramente ilustrativos.
+          </p>
+        </div>
       </div>
     </div>
   );
