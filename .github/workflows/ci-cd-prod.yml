@@ -1,4 +1,4 @@
-name: CI/CD Pipeline for resolve-frontend-parceiro PROD update v3.5
+name: CI/CD Pipeline for resolve-frontend-parceiro PROD update v3.6
 on:
   push:
     branches:
