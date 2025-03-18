@@ -241,20 +241,33 @@ export default function RegisterPage() {
                   onChange={handleChange}
                 />
               </div>
-              <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md">
+              <div className="flex items-center bg-gray-800 border border-yellow-400 p-3 rounded-md relative">
                 <MapPin size={20} className="mr-2 text-yellow-400" />
                 <select
                   name="unit"
                   value={formData.unit}
                   onChange={handleChange}
-                  className="w-full bg-transparent text-white outline-none"
+                  className="w-full bg-gray-800 text-white outline-none appearance-none" 
+                  style={{
+                    WebkitAppearance: "none",  
+                    color: "white",            
+                    opacity: "1"              
+                  }}
                 >
-                  <option value="">Selecione uma unidade</option>
+                  <option value="" className="bg-gray-800 text-white">Selecione uma unidade</option>
                   {units.map((unit) => (
-                    <option key={unit.id} value={unit.id}>{unit.name}</option>
+                    <option key={unit.id} value={unit.id} className="bg-gray-800 text-white">
+                      {unit.name}
+                    </option>
                   ))}
                 </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                  <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                  </svg>
+                </div>
               </div>
+
             </div>
             <Button
               onClick={handleRegister}
