@@ -100,11 +100,11 @@ export default function LoginPage() {
         toast.success("Login realizado com sucesso!");
 
 
-        if (userData && userData.user_type === "SDR") {
+        if (userData && (userData.user_type === "SDR" || userData.user_type === "Contratos")) {
           router.replace("/admin");
         } else {
           router.replace("/dashboard");
-        }
+        }        
       }
     } catch (error: any) {
       console.error("Erro na autenticação:", error);
