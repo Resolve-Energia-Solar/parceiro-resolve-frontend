@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { User, LogIn, UserPlus, ArrowLeft } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -35,12 +34,10 @@ export default function OnboardingPage() {
   };
 
   const handleLoginNavigation = () => {
-    // Navegação para login com parâmetro indicando status de cliente
     router.push(`/login?isCustomer=${isResolveCustomer ? 'true' : 'false'}`);
   };
 
   const handleRegisterNavigation = () => {
-    // Navegação para registro com parâmetro indicando status de cliente
     router.push(`/register?isCustomer=${isResolveCustomer ? 'true' : 'false'}`);
   };
 

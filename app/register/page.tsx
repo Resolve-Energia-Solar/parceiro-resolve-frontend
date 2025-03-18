@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "../../hooks/useUser";
 import { signUpAsPartner, getUnits, resendConfirmationEmail } from "../../services/auth/authService";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,8 @@ import InputMask from 'react-input-mask';
 export default function RegisterPage() {
   const router = useRouter();
   const { user } = useUser();
+  const searchParams = useSearchParams();
+  const isCustomer = searchParams?.get('isCustomer') === 'true';
 
   const [formData, setFormData] = useState({
     name: "",
@@ -23,7 +25,8 @@ export default function RegisterPage() {
     birthDate: "",
     email: "",
     telefone: "",
-    unit: ""
+    unit: "",
+    isCustomer: isCustomer,
   });
 
   const [units, setUnits] = useState<{ id: string; name: string }[]>([]);
@@ -112,6 +115,7 @@ export default function RegisterPage() {
         birthDate: formData.birthDate,
         telefone: formData.telefone,
         unit: formData.unit,
+        isResolveCustomer: formData.isCustomer ? "TRUE" : "FALSE",
       });
 
       if (newUser) {

@@ -48,7 +48,7 @@ export async function signUpAsPartner({
   birthDate,
   telefone,
   unit,
-  isResolveCustomer = false,
+  isResolveCustomer
 }: {
   name: string;
   email: string;
@@ -56,8 +56,7 @@ export async function signUpAsPartner({
   birthDate: string;
   unit: string;
   telefone: string;
-  isSuperAdmin?: boolean;
-  isResolveCustomer?: boolean;
+  isResolveCustomer?: any;
 }) {
   return signUp({
     name,
@@ -95,7 +94,6 @@ export async function signUpAsClient({
     telefone,
     unit,
     userType: 'Cliente',
-    statusIndication: 'Lead'
   });
 }
 
