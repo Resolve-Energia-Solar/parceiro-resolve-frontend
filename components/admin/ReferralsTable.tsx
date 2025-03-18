@@ -71,7 +71,7 @@ export const ReferralsTable = ({
             />
 
             <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
-              {(userType === 'Admin' || userType === 'Super admin') && (
+              {(userType === 'Admin' || userType === 'Super admin' || userType === "Contratos") && (
                 <Select value={selectedUnit} onValueChange={onUnitChange}>
                   <SelectTrigger className="w-full sm:w-40 bg-gray-700 text-gray-100 border-gray-600">
                     <SelectValue placeholder="Unidade" />

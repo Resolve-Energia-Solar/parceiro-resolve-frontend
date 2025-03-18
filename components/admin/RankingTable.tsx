@@ -99,7 +99,6 @@ export const RankingTable = ({ partnersRanking, clientsRanking }: RankingTablePr
         )}
       </div>
 
-      {/* Desktop view */}
       <Card className="bg-gray-800 shadow-lg overflow-hidden mb-8 hidden lg:block">
         <CardHeader className="border-b border-gray-700">
           <div className="flex justify-between items-center">

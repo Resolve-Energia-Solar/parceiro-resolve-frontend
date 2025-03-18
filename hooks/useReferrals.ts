@@ -234,7 +234,6 @@ export const useReferrals = ({ userId, userType }: UseReferralsProps) => {
         return result;
     }, [referrals, selectedUnit, selectedStatus, searchTerm]);
 
-    // Pagination logic
     const totalItems = filteredReferrals.length;
     const paginatedReferrals = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
