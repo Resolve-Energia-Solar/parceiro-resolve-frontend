@@ -49,8 +49,9 @@ export function Header({ className }: HeaderProps) {
   };
 
   const isAdmin = user && user.user_type === 'Admin';
+  const isContract = user && user.user_type === 'Contratos';
   const isSuperAdmin = user && user.user_type === 'Super admin';
-  const isAdminOrSuperAdmin = isAdmin || isSuperAdmin;
+  const isAdminOrSuperAdmin = isAdmin || isSuperAdmin || isContract;
 
   return (
     <motion.header
@@ -101,7 +102,6 @@ export function Header({ className }: HeaderProps) {
               </motion.div>
             )}
             
-            {/* Botão específico para Super Admin */}
             {isSuperAdmin && (
               <motion.div
                 whileHover={{ scale: 1.05 }}
@@ -145,7 +145,6 @@ export function Header({ className }: HeaderProps) {
                     </Link>
                   )}
                   
-                  {/* Opções exclusivas para Super Admin */}
                   {isSuperAdmin && (
                     <>
                       <Link 
