@@ -1,8 +1,8 @@
 import { supabase } from "@/lib/supabase";
 
-const formatCpf = (cpf: string) => cpf.replace(/\D/g, "");
+export const formatCpf = (cpf: string) => cpf.replace(/\D/g, "");
 
-const formatBirthDate = (birthDate: string) => {
+export const formatBirthDate = (birthDate: string) => {
   try {
     if (birthDate.includes('/')) {
       const [day, month, year] = birthDate.split('/');
@@ -24,7 +24,7 @@ const formatBirthDate = (birthDate: string) => {
   }
 };
 
-const formatBirthDateForDB = (birthDate: string): string => {
+export const formatBirthDateForDB = (birthDate: string): string => {
   if (birthDate.includes('/')) {
     const [day, month, year] = birthDate.split('/');
     return `${year}-${month}-${day}`;
@@ -395,23 +395,6 @@ export async function updateProfile(userId: string, updates: Partial<{
   }
 }
 
-async function createReferral(referrerId: string, referredUserId: string) {
-  try {
-    const { error } = await supabase
-      .from('referrals')
-      .insert({
-        referrer_id: referrerId,
-        referred_user_id: referredUserId,
-        status: 'pending'
-      });
-
-    if (error) throw new Error(error.message);
-
-    await updateReferralCount(referrerId);
-  } catch (error) {
-    throw new Error(`Erro ao criar referência: ${error}`);
-  }
-}
 
 async function updateReferralCount(userId: string) {
   try {
@@ -452,7 +435,7 @@ async function logUserActivity(userId: string, action: string, details: string) 
 }
 
 
-function generateReferralCode() {
+export function generateReferralCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
