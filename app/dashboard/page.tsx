@@ -81,12 +81,8 @@ export default function Dashboard() {
 
         console.log("Tipo de usuário:", userData.user_type);
 
-        if (userData.user_type === 'Admin' || userData.user_type === 'Parceiro' || userData.user_type === 'Contratos' || userData.user_type === 'Super admin') {
+        if (userData.user_type === 'Admin' || userData.user_type === 'Parceiro' || userData.user_type === 'SDR' || userData.user_type === 'Contratos' || userData.user_type === 'Super admin') {
           setIsAuthorized(true);
-        } else if (userData.user_type === 'SDR') {
-          console.log("Redirecionando SDR para /admin");
-          router.push("/admin");
-          return;
         } else {
           console.log("Usuário não autorizado:", userData.user_type);
           toast.error("Acesso não autorizado. Esta página é restrita para Administradores e Parceiros.");
