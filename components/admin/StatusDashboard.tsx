@@ -23,7 +23,7 @@ export const StatusDashboard = ({ statusData }: StatusDashboardProps) => {
       <StatusCard 
         icon={statusIcons['Contato comercial']} 
         label="Contato Comercial" 
-        value={getStatusValue('Contato Comercial')} 
+        value={getStatusValue('Contato comercial')} 
         color={statusColors['Contato comercial']} 
       />
       <StatusCard 
