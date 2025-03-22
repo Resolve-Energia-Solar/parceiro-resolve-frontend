@@ -28,11 +28,36 @@ export const useReferrals = ({ userId, userType }: UseReferralsProps) => {
     const [partnersRanking, setPartnersRanking] = useState<RankingData[]>([]);
     const [clientsRanking, setClientsRanking] = useState<RankingData[]>([]);
 
+    
+
     const canApproveReferrals = useMemo(() => {
         return userType === 'Admin' ||
             userType === 'Super admin' ||
             userType === 'Contratos';
     }, [userType]);
+
+    const allowedStatusForUser = useMemo(() => {
+        switch (userType) {
+            case "SDR":
+                return ["Contato comercial", "Em negociação", "Sem Interesse ou Reprovado"];
+            case "Contratos":
+                return ["Sem Interesse ou Reprovado", "Aprovado"];
+            case "Admin":
+            case "Super admin":
+                return ["Indicação", "Contato comercial", "Em negociação", "Sem Interesse ou Reprovado", "Aprovado"];
+            default:
+                return [];
+        }
+    }, [userType]);
+
+    console.log("User Type:", userType);
+console.log("Allowed Status for User:", allowedStatusForUser);
+console.log("Referral Status:", referrals);
+console.log("Can Select 'Sem Interesse ou Reprovado':", allowedStatusForUser.includes("Sem Interesse ou Reprovado"));
+
+    
+    
+    
 
     useEffect(() => {
         const fetchData = async () => {
@@ -349,6 +374,8 @@ export const useReferrals = ({ userId, userType }: UseReferralsProps) => {
         }
       };
 
+      
+
     
 
     return {
@@ -376,7 +403,8 @@ export const useReferrals = ({ userId, userType }: UseReferralsProps) => {
         clientsRanking,
         updateReferralStatus,
         rejectReferral,
-        exportToExcel
+        exportToExcel,
+        allowedStatusForUser
     };
 };
 

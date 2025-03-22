@@ -39,10 +39,11 @@ export default function ReferralsDashboard() {
     clientsRanking,
     updateReferralStatus,
     rejectReferral,
-    exportToExcel
+    exportToExcel,
+    allowedStatusForUser
   } = useReferrals({
     userId: user?.id,
-    userType,
+    userType: userType
   });
 
   if (isLoading) {
@@ -111,6 +112,7 @@ export default function ReferralsDashboard() {
           userUnitId={userUnitId}
           userType={userType}
           canApproveReferrals={canApproveReferrals}
+          allowedStatusForUser={allowedStatusForUser}
           onSearch={setSearchTerm}
           onUnitChange={setSelectedUnit}
           onStatusChange={setSelectedStatus}

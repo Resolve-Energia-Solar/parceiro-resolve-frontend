@@ -19,6 +19,7 @@ interface ReferralsTableProps {
   userUnitId: string | null;
   userType: string | undefined;
   canApproveReferrals: boolean;
+  allowedStatusForUser: string[];
   onSearch: (term: string) => void;
   onUnitChange: (unit: string) => void;
   onStatusChange: (status: string) => void;
@@ -29,9 +30,9 @@ interface ReferralsTableProps {
 }
 
 export const ReferralsTable = ({
-  referrals, 
-  currentPage, 
-  itemsPerPage, 
+  referrals,
+  currentPage,
+  itemsPerPage,
   totalItems,
   units,
   selectedUnit,
@@ -44,17 +45,20 @@ export const ReferralsTable = ({
   onStatusChange,
   onPageChange,
   onStatusUpdate,
-  onExportToExcel
+  onExportToExcel,
+  allowedStatusForUser
 }: ReferralsTableProps) => {
+
+  
   return (
     <Card className="bg-gray-800 shadow-lg overflow-hidden mb-8">
-       <CardHeader className="border-b border-gray-700 pb-4">
+      <CardHeader className="border-b border-gray-700 pb-4">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
           <div className="flex items-center gap-3">
             <CardTitle className="text-xl font-semibold text-indigo-400">Indicações</CardTitle>
-            <Button 
-              onClick={onExportToExcel} 
-              size="sm" 
+            <Button
+              onClick={onExportToExcel}
+              size="sm"
               className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
             >
               <Download size={16} />
@@ -125,7 +129,7 @@ export const ReferralsTable = ({
           </thead>
           <tbody className="bg-gray-800 divide-y divide-gray-700">
             {referrals.length > 0 ? (
-              referrals.map((referral) => (
+              referrals.map((referral) => (            
                 <tr key={referral.id} className="hover:bg-gray-750">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-100">{referral.referrer?.name || "—"}</div>
@@ -194,8 +198,9 @@ export const ReferralsTable = ({
                           <SelectItem
                             value="Indicação"
                             className="hover:bg-gray-600 text-white"
-                            disabled={referral.status === 'Indicação'}
+                            disabled={!Array.isArray(allowedStatusForUser) || !allowedStatusForUser.includes("Indicação") || referral.status === "Indicação"}
                           >
+                            
                             <div className="flex items-center gap-2">
                               <span className="h-2 w-2 rounded-full" style={{ backgroundColor: statusColors['Indicação'] }}></span>
                               Indicação
@@ -204,7 +209,7 @@ export const ReferralsTable = ({
                           <SelectItem
                             value="Contato comercial"
                             className="hover:bg-gray-600 text-white"
-                            disabled={referral.status === 'Contato comercial'}
+                            disabled={!Array.isArray(allowedStatusForUser) || !allowedStatusForUser.includes("Contato comercial") || referral.status === "Contato comercial"}
                           >
                             <div className="flex items-center gap-2">
                               <span className="h-2 w-2 rounded-full" style={{ backgroundColor: statusColors['Contato comercial'] }}></span>
@@ -214,7 +219,7 @@ export const ReferralsTable = ({
                           <SelectItem
                             value="Em negociação"
                             className="hover:bg-gray-600 text-white"
-                            disabled={referral.status === 'Em negociação'}
+                            disabled={!Array.isArray(allowedStatusForUser) || !allowedStatusForUser.includes("Em negociação") || referral.status === "Em negociação"}
                           >
                             <div className="flex items-center gap-2">
                               <span className="h-2 w-2 rounded-full" style={{ backgroundColor: statusColors['Em negociação'] }}></span>
@@ -222,9 +227,10 @@ export const ReferralsTable = ({
                             </div>
                           </SelectItem>
                           <SelectItem
+                          
                             value="Sem Interesse ou Reprovado"
                             className="hover:bg-gray-600 text-white"
-                            disabled={referral.status === 'Sem Interesse ou Reprovado'}
+                            disabled={!Array.isArray(allowedStatusForUser) || !allowedStatusForUser.includes("Sem Interesse ou Reprovado") || referral.status === "Sem Interesse ou Reprovado"}
                           >
                             <div className="flex items-center gap-2">
                               <span className="h-2 w-2 rounded-full" style={{ backgroundColor: statusColors['Sem Interesse ou Reprovado'] }}></span>
@@ -234,7 +240,7 @@ export const ReferralsTable = ({
                           <SelectItem
                             value="Aprovado"
                             className="hover:bg-gray-600 text-white"
-                            disabled={referral.status === 'Aprovado' || !canApproveReferrals}
+                            disabled={!Array.isArray(allowedStatusForUser) || !allowedStatusForUser.includes("Aprovado") || referral.status === "Aprovado"}
                           >
                             <div className="flex items-center gap-2">
                               <span className="h-2 w-2 rounded-full" style={{ backgroundColor: statusColors['Aprovado'] }}></span>
