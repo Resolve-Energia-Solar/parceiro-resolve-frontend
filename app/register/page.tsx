@@ -156,7 +156,7 @@ export default function RegisterPage() {
       </Link>
 
       <Image
-        src="https://fortaleza-aldeota.resolvenergiasolar.com/wp-content/uploads/2024/11/Logo-resolve-1024x279.webp"
+        src="https://supabase.resolvenergiasolar.com/storage/v1/object/public/parceiros//Logo-resolve-1024x279.webp"
         alt="Logo"
         width={150}
         height={50}

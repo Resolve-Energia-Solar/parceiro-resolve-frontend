@@ -317,7 +317,7 @@ export default function FormsPage() {
                     className="mb-6"
                   >
                     <Image
-                      src="https://fortaleza-aldeota.resolvenergiasolar.com/wp-content/uploads/2024/11/Logo-resolve-1024x279.webp"
+                      src="https://supabase.resolvenergiasolar.com/storage/v1/object/public/parceiros//Logo-resolve-1024x279.webp"
                       alt="Resolve Logo"
                       width={400}
                       height={109}

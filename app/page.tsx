@@ -36,7 +36,7 @@ const MemoizedFooter = memo(function Footer() {
             className="col-span-1 lg:col-span-2"
           >
             <Image
-              src="https://fortaleza-aldeota.resolvenergiasolar.com/wp-content/uploads/2024/11/Logo-resolve-1024x279.webp"
+              src="https://supabase.resolvenergiasolar.com/storage/v1/object/public/parceiros//Logo-resolve-1024x279.webp"
               alt="Resolve Logo"
               width={240}
               height={65}
@@ -241,7 +241,7 @@ export default function Home() {
             className="flex justify-center mb-8 md:mb-12"
           >
             <Image
-              src="https://fortaleza-aldeota.resolvenergiasolar.com/wp-content/uploads/2024/11/Logo-resolve-1024x279.webp"
+              src="https://supabase.resolvenergiasolar.com/storage/v1/object/public/parceiros//Logo-resolve-1024x279.webp"
               alt="Resolve Logo"
               width={400}
               height={109}
