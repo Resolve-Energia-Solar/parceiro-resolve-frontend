@@ -225,7 +225,7 @@ export default function Home() {
     {
       icon: Trophy,
       title: "Ganhe um iPhone 15",
-      description: "O participante com mais indicações convertidas em vendas até 31/03/2025 ganha um iPhone 15"
+      description: "O participante com mais indicações convertidas em vendas até 30/04/2025 ganha um iPhone 15"
     }
   ];
 
@@ -270,7 +270,7 @@ export default function Home() {
                 className="text-base sm:text-lg md:text-xl text-gray-300 mb-6 md:mb-8"
               >
                 As indicações que resultarem em vendas confirmadas contam para o ranking.
-                Quem converter mais indicações em vendas válidas até 31/03/2025 leva um iPhone 15 para casa!
+                Quem converter mais indicações em vendas válidas até 30/04/2025 leva um iPhone 15 para casa!
               </motion.p>
               <motion.div variants={fadeInUp}>
                 <Link href="/onboarding">
@@ -304,7 +304,7 @@ export default function Home() {
                   className="rounded-3xl overflow-hidden"
                 >
                   <Image
-                    src="https://mir-s3-cdn-cf.behance.net/project_modules/max_3840_webp/34b5bf180145769.6505ae7623131.jpg"
+                    src="https://www.donanimhaber.com/cache-v2/?t=20230215101142&width=-1&text=0&path=https://www.donanimhaber.com/images/images/haber/160569/600x338iphone-15-pro-yeni-ekran-tasarimi-ile-gelecek.jpg"
                     alt="iPhone 15"
                     width={800}
                     height={1000}
@@ -435,7 +435,7 @@ export default function Home() {
                 }}
               >
                 <Image
-                  src="https://mir-s3-cdn-cf.behance.net/project_modules/max_3840_webp/34b5bf180145769.6505ae7623131.jpg"
+                  src="https://mrglobal.ch/cdn/shop/files/apple_black_banner.jpg?v=1683814721&width=1920"
                   alt="iPhone 15 Pro"
                   width={800}
                   height={1000}
@@ -495,7 +495,7 @@ export default function Home() {
                   {
                     id: "item-3",
                     question: "Até quando posso participar?",
-                    answer: "A promoção está válida até 31/03/2025."
+                    answer: "A promoção está válida até 30/04/2025."
                   },
                   {
                     id: "item-4",
